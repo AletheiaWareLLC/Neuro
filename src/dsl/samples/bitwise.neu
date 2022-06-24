@@ -1,0 +1,55 @@
+neuron 0 {
+    state 0 {
+        receive {
+            not
+            send
+        }
+    }
+}
+
+neuron 1 {
+    state 0 {
+        receive {
+            and
+            copy
+            send
+        }
+    }
+}
+
+neuron 2 {
+    state 0 {
+        receive {
+            or
+            copy
+            send
+        }
+    }
+}
+
+neuron 3 {
+    state 0 {
+        receive {
+            xor
+            copy
+            send
+        }
+    }
+}
+
+neuron 4 {
+    state 0 {
+        receive {
+            swap
+            drop
+        }
+    }
+}
+
+connect 0 1
+connect 0 2
+connect 0 3
+connect 1 2
+connect 1 3
+connect 2 3
+connect 3 4

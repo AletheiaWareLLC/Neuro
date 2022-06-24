@@ -1,0 +1,8 @@
+neuron 0 {
+    state 0 {
+        receive {
+            not
+            send
+        }
+    }
+}

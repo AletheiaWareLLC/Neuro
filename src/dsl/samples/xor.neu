@@ -1,0 +1,9 @@
+neuron 0 {
+    state 0 {
+        receive {
+            xor
+            copy
+            send
+        }
+    }
+}
