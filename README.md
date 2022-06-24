@@ -31,55 +31,28 @@ cmake --build build/test/
 Generates a new random neural network.
 
 ```
-./build/Neuro generate [options] <destination-file>
+./build/Neuro generate [options] <path-to-destination-file>
 ```
-
-### Parameter
-
-1. Path to DSL Destination File
-
-### Options
-
-- Number of Neurons (default 5)
-- Number of Connections per Neuron (default 5)
-- Number of States per Neuron (default 5)
-- Number of Actions per State (default 5)
-- Number of Instructions per Action (default 5)
 
 ## Run
 
 Runs a neural network.
 
 ```
-./build/Neuro run [options] <source-file>
+./build/Neuro run [options] <path-to-source-file>
 ```
-
-### Parameter
-
-1. Path to DSL Source File
-
-### Options
-
-- Path to Input (default read from stdin)
-- Path to Ouput (default write to stdout)
-- Cycle Limit (default 100)
 
 ## Evolve
 
 Evolves a population of neural networks
 
 ```
-./build/Neuro evolve [options] <population-directory> <fitness-function>
+./build/Neuro evolve [options] <path-to-fitness-function-program>
 ```
 
-### Parameters
+## Help
 
-1. Path to Population
-2. Path to Fitness Function
-
-### Options
-
-- Population Limit (default 100)
-- Generation Limit (default 100)
-- Cycle Limit (default 100)
-- Mutation Rate (default 1 per generation)
+```
+./build/Neuro help
+./build/Neuro help <command>
+```
