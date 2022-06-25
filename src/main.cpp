@@ -76,8 +76,11 @@ int generate(std::vector<std::string> options, std::string parameter) {
 
   std::ofstream destination;
   destination.open(parameter);
-  nn.emit(destination);
+  result = nn.emit(destination);
   destination.close();
+  if (result != 0) {
+    return result;
+  }
   return 0;
 }
 

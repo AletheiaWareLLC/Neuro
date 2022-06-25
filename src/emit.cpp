@@ -4,9 +4,11 @@
 #include <Neuro/neuron.h>
 #include <Neuro/state.h>
 
-void Network::emit(std::ostream &os) {
+bool Network::emit(std::ostream &os) {
   for (auto n : neurons) {
-    n.emit(os);
+    if (!n.emit(os)) {
+      return false;
+    }
     os << '\n';
   }
 
@@ -16,84 +18,171 @@ void Network::emit(std::ostream &os) {
     }
   }
   os << '\n';
+  return true;
 }
 
-void Neuron::emit(std::ostream &os) {
+bool Neuron::emit(std::ostream &os) {
   os << "neuron " << id << " {\n";
   for (auto s : states) {
-    s.emit(os);
+    if (!s.emit(os)) {
+      return false;
+    }
   }
   os << "}\n";
+  return true;
 }
 
-void State::emit(std::ostream &os) {
+bool State::emit(std::ostream &os) {
   os << "\tstate " << id << " {\n";
   for (auto [p, a] : actions) {
-    os << "\t\trecieve " << p << " ";
-    a.emit(os);
+    os << "\t\trecieve " << (int)p << " ";
+    if (!a.emit(os)) {
+      return false;
+    }
   }
   if (wildcard) {
     os << "\t\trecieve ";
-    wildcard->emit(os);
+    if (!wildcard->emit(os)) {
+      return false;
+    }
   }
   os << "\t}\n";
+  return true;
 }
 
-void Action::emit(std::ostream &os) {
+bool Action::emit(std::ostream &os) {
+  // Reverse label map
+  std::map<unsigned int, std::vector<std::string>> ls;
+  for (auto [k, v] : labels) {
+    ls[v].push_back(k);
+  }
   os << "{\n";
+  int pc = 0;
   for (auto i : instructions) {
+    for (auto l : ls[pc]) {
+      os << "\t\t#" << l << '\n';
+    }
     os << "\t\t\t";
-    i->emit(os);
+    if (!i->emit(os)) {
+      return false;
+    }
+    pc++;
+  }
+  for (auto l : ls[pc]) {
+    os << "\t\t#" << l << '\n';
   }
   os << "\t\t}\n";
+  return true;
 }
 
-void Not::emit(std::ostream &os) { os << "not\n"; }
+bool Not::emit(std::ostream &os) {
+  os << "not\n";
+  return true;
+}
 
-void And::emit(std::ostream &os) { os << "and\n"; }
+bool And::emit(std::ostream &os) {
+  os << "and\n";
+  return true;
+}
 
-void Or::emit(std::ostream &os) { os << "or\n"; }
+bool Or::emit(std::ostream &os) {
+  os << "or\n";
+  return true;
+}
 
-void Xor::emit(std::ostream &os) { os << "xor\n"; }
+bool Xor::emit(std::ostream &os) {
+  os << "xor\n";
+  return true;
+}
 
-void Lls::emit(std::ostream &os) { os << "lls\n"; }
+bool Lls::emit(std::ostream &os) {
+  os << "lls\n";
+  return true;
+}
 
-void Rls::emit(std::ostream &os) { os << "rls\n"; }
+bool Rls::emit(std::ostream &os) {
+  os << "rls\n";
+  return true;
+}
 
-void Add::emit(std::ostream &os) { os << "add\n"; }
+bool Add::emit(std::ostream &os) {
+  os << "add\n";
+  return true;
+}
 
-void Sub::emit(std::ostream &os) { os << "sub\n"; }
+bool Sub::emit(std::ostream &os) {
+  os << "sub\n";
+  return true;
+}
 
-void Mul::emit(std::ostream &os) { os << "mul\n"; }
+bool Mul::emit(std::ostream &os) {
+  os << "mul\n";
+  return true;
+}
 
-void Div::emit(std::ostream &os) { os << "div\n"; }
+bool Div::emit(std::ostream &os) {
+  os << "div\n";
+  return true;
+}
 
-void Mod::emit(std::ostream &os) { os << "mod\n"; }
+bool Mod::emit(std::ostream &os) {
+  os << "mod\n";
+  return true;
+}
 
-void Ras::emit(std::ostream &os) { os << "ras\n"; }
+bool Ras::emit(std::ostream &os) {
+  os << "ras\n";
+  return true;
+}
 
-void Jump::emit(std::ostream &os) {
+bool Jump::emit(std::ostream &os) {
   switch (code) {
   case Jump::ConditionCode::EZ:
     os << "jez ";
+    break;
   case Jump::ConditionCode::NZ:
     os << "jnz ";
+    break;
   case Jump::ConditionCode::LE:
     os << "jle ";
+    break;
   case Jump::ConditionCode::LZ:
     os << "jlz ";
+    break;
+  default:
+    std::cerr << "Unrecognized Jump Condition Code: " << (int)code << std::endl;
+    return false;
   }
   os << "#" << label << '\n';
+  return true;
 }
 
-void Goto::emit(std::ostream &os) { os << "goto " << state << '\n'; }
+bool Goto::emit(std::ostream &os) {
+  os << "goto " << (int)state << '\n';
+  return true;
+}
 
-void Push::emit(std::ostream &os) { os << "push " << constant << '\n'; }
+bool Push::emit(std::ostream &os) {
+  os << "push " << (int)constant << '\n';
+  return true;
+}
 
-void Drop::emit(std::ostream &os) { os << "drop\n"; }
+bool Drop::emit(std::ostream &os) {
+  os << "drop\n";
+  return true;
+}
 
-void Copy::emit(std::ostream &os) { os << "copy\n"; }
+bool Copy::emit(std::ostream &os) {
+  os << "copy\n";
+  return true;
+}
 
-void Swap::emit(std::ostream &os) { os << "swap\n"; }
+bool Swap::emit(std::ostream &os) {
+  os << "swap\n";
+  return true;
+}
 
-void Send::emit(std::ostream &os) { os << "send\n"; }
+bool Send::emit(std::ostream &os) {
+  os << "send\n";
+  return true;
+}

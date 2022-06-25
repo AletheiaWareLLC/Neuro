@@ -32,7 +32,7 @@ public:
     labels = a.labels;
     return *this;
   }
-  void emit(std::ostream &os);
+  bool emit(std::ostream &os);
 };
 
 #endif

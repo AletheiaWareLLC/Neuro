@@ -33,12 +33,12 @@ public:
     return *this;
   }
 
-  int generate(unsigned int neurons, unsigned int connections,
+  bool generate(unsigned int neurons, unsigned int connections,
                unsigned int states, unsigned int receivers,
                unsigned int instructions);
 
   void reset();
-  void emit(std::ostream &os);
+  bool emit(std::ostream &os);
 };
 
 #endif

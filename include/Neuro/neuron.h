@@ -37,7 +37,7 @@ public:
     return *this;
   }
 
-  void emit(std::ostream &os);
+  bool emit(std::ostream &os);
   void dump();
 };
 

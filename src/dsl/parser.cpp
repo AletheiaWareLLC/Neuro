@@ -42,6 +42,8 @@ int Parser::parseNetwork(Network &nn) {
       std::cerr << "Error: Negative Connection Destination" << std::endl;
       return -1;
     }
+    // TODO support multiple destinations, eg;
+    // connect 0 1 2 3 4
     nn.connections[source].push_back(destination);
   }
   return 0;
@@ -265,6 +267,7 @@ int Parser::parseInstruction(Action &a) {
     if (result != 0) {
       return result;
     }
+    // TODO ensure constant in within sbyte range
     i = std::make_shared<Push>(constant);
     break;
   }
