@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <Neuro/action.h>
 #include <Neuro/instruction.h>
 #include <Neuro/network.h>

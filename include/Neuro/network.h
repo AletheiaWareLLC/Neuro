@@ -3,8 +3,11 @@
 
 #include <cstddef>
 #include <map>
+#include <ostream>
 #include <queue>
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include <Neuro/data.h>
@@ -35,11 +38,22 @@ public:
     return *this;
   }
 
-  bool generate(uint neurons, uint connections,
-                uint states, uint receivers,
-                uint instructions);
+  std::string id() const;
+
+  bool load(std::string name);
+
+  bool generate(uint neurons = 3, uint connections = 5, uint states = 3,
+                uint receivers = 3, uint instructions = 3);
+  bool generateNeuron(uint id, uint states = 3, uint receivers = 3,
+                      uint instructions = 3);
+  bool generateConnection();
+
+  bool mate(const Network &a, const Network &b);
+
+  bool mutate();
 
   void reset();
+
   bool emit(std::ostream &os) const;
 };
 

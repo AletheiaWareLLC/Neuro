@@ -3,6 +3,7 @@
 
 #include <map>
 #include <optional>
+#include <ostream>
 
 #include <Neuro/action.h>
 #include <Neuro/data.h>
@@ -19,9 +20,6 @@ public:
   State(State &&s) : id(s.id), actions(s.actions), wildcard(s.wildcard) {}
   ~State() {}
   State &operator=(const State &s) {
-    std::cout << "Copy Assign" << std::endl;
-    std::cout << this << std::endl;
-    std::cout << &s << std::endl;
     id = s.id;
     actions = s.actions;
     wildcard = s.wildcard;
@@ -33,6 +31,8 @@ public:
     wildcard = s.wildcard;
     return *this;
   }
+
+  bool generate(uint states, uint receivers = 3, uint instructions = 3);
 
   bool emit(std::ostream &os) const;
 };

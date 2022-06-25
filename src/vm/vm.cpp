@@ -1,10 +1,11 @@
-#include <cstddef>
+#include <iostream>
+#include <utility>
 
 #include <Neuro/data.h>
 #include <Neuro/network.h>
 #include <Neuro/vm/vm.h>
 
-bool VM::execute(Network &nn, Neuron &n, State &s, Action &a, uint &c) {
+bool VM::execute(Network &nn, Neuron &n, State &s, Action &a, uint &c) const {
   // Execute Action Instructions
   for (a.pc = 0; a.pc >= 0 && a.pc < a.instructions.size();) {
     // Check and Increment Cycle Counter
@@ -24,47 +25,76 @@ bool VM::execute(Network &nn, Neuron &n, State &s, Action &a, uint &c) {
 }
 
 bool VM::execute(Network &nn, const std::vector<sbyte> &input,
-                 std::vector<sbyte> &output) {
+                 std::vector<sbyte> &output) const {
   nn.reset();
 
-  auto ns = nn.neurons.size();
-
-  // Write Input Data
-  for (int i = 0; i < input.size() && i < ns; i++) {
-    nn.queue.push(std::make_pair(i, input[i]));
-  }
+  const auto ns = nn.neurons.size();
 
   uint c = 0;
 
-  // Iterate Activated Neurons
-  while (!nn.queue.empty()) {
-    auto [id, v] = nn.queue.front();
-    nn.queue.pop();
-    Neuron &n = nn.neurons[id];
+  for (uint in = 0; in < input.size(); in++) {
 
-    // Push Input
-    n.stack.push(v);
+    // Write Next Input Data
+    nn.queue.push(std::make_pair(0, input[in]));
 
-    // Get Current State
-    State &s = n.states[n.state];
+    while (!nn.queue.empty()) {
+      // Process Next Activated Neuron
+      auto [id, v] = nn.queue.front();
+      nn.queue.pop();
 
-    // Get Action for Input
-    if (auto ia = s.actions.find(v); ia != s.actions.end()) {
-      if (!execute(nn, n, s, ia->second, c)) {
+      if (id >= nn.neurons.size()) {
+        std::cerr << "VM Error: Neuron Index Out-of-Bounds: " << id
+                  << std::endl;
         return false;
       }
-    } else if (s.wildcard.has_value()) {
-      if (!execute(nn, n, s, s.wildcard.value(), c)) {
+
+      Neuron &n = nn.neurons.at(id);
+
+      // Check Stack Overflow
+      if (n.stack.size() >= 10) {
+        std::cerr << "VM Error: Stack Overflow" << std::endl;
         return false;
       }
-    } else {
-      // Unhandled input
+
+      // Push Input
+      n.stack.push(v);
+
+      if (n.state >= n.states.size()) {
+        std::cerr << "VM Error: State Index Out-of-Bounds: " << n.state
+                  << std::endl;
+        return false;
+      }
+
+      // Get Current State
+      State &s = n.states[n.state];
+
+      // Get Action for Input
+      if (auto ia = s.actions.find(v); ia != s.actions.end()) {
+        if (!execute(nn, n, s, ia->second, c)) {
+          return false;
+        }
+      } else if (s.wildcard.has_value()) {
+        if (!execute(nn, n, s, s.wildcard.value(), c)) {
+          return false;
+        }
+      } else {
+        // Unhandled input
+        return false;
+      }
     }
-  }
 
-  // Read Output Data
-  for (int i = 0; i < output.size() && i < ns; i++) {
-    output[i] = nn.neurons[ns - i - 1].stack.top();
+    // Read Next Output Data
+    const auto on = nn.neurons[ns - 1];
+    // Check Stack Underflow
+    if (on.stack.size() < 1) {
+      std::cerr << "Output Error: Stack Underflow" << std::endl;
+      return false;
+    }
+
+    const auto ov = on.stack.top();
+    if (ov != 0) {
+      output.push_back(ov);
+    }
   }
 
   return true;

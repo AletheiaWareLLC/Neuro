@@ -1,5 +1,7 @@
-#include <Neuro/dsl/token.h>
 #include <iostream>
+#include <map>
+
+#include <Neuro/dsl/token.h>
 
 bool Token::is(Category c) const { return category == c; }
 

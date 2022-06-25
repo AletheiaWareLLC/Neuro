@@ -3,8 +3,7 @@
 #include <vector>
 
 #include <Neuro/data.h>
-#include <Neuro/dsl/lexer.h>
-#include <Neuro/dsl/parser.h>
+#include <Neuro/ea/ea.h>
 #include <Neuro/network.h>
 #include <Neuro/vm/vm.h>
 
@@ -12,7 +11,7 @@ void usage(std::string name) {
   std::cout << name << '\n';
   std::cout << "\tgenerate [options] <path-to-destination-file>\n";
   std::cout << "\trun [options] <path-to-source-file>\n";
-  std::cout << "\tevolve [options] <path-to-fitness-function-program>\n";
+  std::cout << "\tevolve [options] <path-to-fitness-function>\n";
   std::cout << "\thelp\n";
 }
 
@@ -73,7 +72,7 @@ bool generate(std::vector<std::string> options, std::string parameter) {
   }
 
   Network nn;
-  if (!nn.generate(connections, neurons, states, receivers, instructions)) {
+  if (!nn.generate(neurons, connections, states, receivers, instructions)) {
     return -1;
   }
 
@@ -100,14 +99,10 @@ bool run(std::vector<std::string> options, std::string parameter) {
     return -1;
   }
 
-  // Parse Network
-  std::ifstream source(parameter);
-  Lexer lexer(source);
-  Parser parser(lexer);
   Network nn;
-  const auto result = parser.parseNetwork(nn);
-  source.close();
-  if (!result) {
+
+  // Parse Network
+  if (!nn.load(parameter)) {
     return -1;
   }
 
@@ -119,30 +114,25 @@ bool run(std::vector<std::string> options, std::string parameter) {
   VM vm(cycles);
 
   // Communication
-  std::vector<sbyte> input(ns, 0);
-  std::vector<sbyte> output(ns, 0);
+  std::vector<sbyte> input;
+  std::vector<sbyte> output;
 
-  std::string answer;
-  while (std::getline(std::cin, answer)) {
+  std::string question;
+  while (std::getline(std::cin, question)) {
     int i = 0;
-    for (const auto c : answer) {
-      if (i < ns) {
-        input[i] = c;
-        i++;
-      } else {
-        break;
-      }
+    for (const auto c : question) {
+      input.push_back(c);
     }
     if (vm.execute(nn, input, output)) {
       for (const auto o : output) {
-        if (o == '\n') {
+        if (o == 0) {
           break;
         }
         std::cout << std::bitset<8>(o);
       }
       std::cout << std::endl;
       for (const auto o : output) {
-        if (o == '\n') {
+        if (o == 0) {
           break;
         }
         std::cout << o;
@@ -160,9 +150,11 @@ bool run(std::vector<std::string> options, std::string parameter) {
 
 int evolve(std::vector<std::string> options, std::string parameter) {
   std::string directory = "./population";
+  uint neurons = 3;
+  uint connections = 5;
   uint population = 100;
-  uint generation = 100;
-  uint cycles = 100;
+  uint generation = 10;
+  uint cycles = 25;
 
   // TODO Parse Options
   for (const auto o : options) {
@@ -170,11 +162,16 @@ int evolve(std::vector<std::string> options, std::string parameter) {
   }
 
   if (parameter.size() == 0) {
-    error() << "Missing <path-to-fitness-function-program> parameter\n";
+    error() << "Missing <path-to-fitness-function> parameter\n";
     return -1;
   }
 
-  // TODO
+  EA ea(directory, parameter, neurons, connections, population, generation,
+        cycles);
+
+  if (!ea.evolve()) {
+    return -1;
+  }
   return 0;
 }
 

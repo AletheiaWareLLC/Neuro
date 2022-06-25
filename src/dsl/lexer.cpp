@@ -1,4 +1,6 @@
+#include <iostream>
 #include <map>
+#include <sstream>
 
 #include <Neuro/dsl/lexer.h>
 

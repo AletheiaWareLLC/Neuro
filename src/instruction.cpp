@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <Neuro/action.h>
 #include <Neuro/instruction.h>
 #include <Neuro/network.h>
@@ -5,6 +7,12 @@
 #include <Neuro/state.h>
 
 bool Not::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 1) {
+    std::cerr << "Not Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Operand
   const auto v = n.stack.top();
   // Pop Operand
@@ -17,6 +25,12 @@ bool Not::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool And::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "And Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Second Operand
   const auto w = n.stack.top();
   // Pop Second Operand
@@ -33,6 +47,12 @@ bool And::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Or::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "Or Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Second Operand
   const auto w = n.stack.top();
   // Pop Second Operand
@@ -49,6 +69,12 @@ bool Or::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Xor::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "Xor Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Second Operand
   const auto w = n.stack.top();
   // Pop Second Operand
@@ -65,6 +91,12 @@ bool Xor::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Lls::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 1) {
+    std::cerr << "Lls Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Operand
   const auto v = n.stack.top();
   // Pop Operand
@@ -77,6 +109,12 @@ bool Lls::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Rls::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 1) {
+    std::cerr << "Rls Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Operand
   const auto v = n.stack.top();
   // Pop Operand
@@ -89,6 +127,12 @@ bool Rls::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Add::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "Add Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Second Operand
   const auto w = n.stack.top();
   // Pop Second Operand
@@ -105,6 +149,12 @@ bool Add::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Sub::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "Sub Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Second Operand
   const auto w = n.stack.top();
   // Pop Second Operand
@@ -121,6 +171,12 @@ bool Sub::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Mul::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "Mul Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Second Operand
   const auto w = n.stack.top();
   // Pop Second Operand
@@ -137,6 +193,12 @@ bool Mul::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Div::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "Div Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Second Operand
   const auto w = n.stack.top();
   // Pop Second Operand
@@ -158,6 +220,12 @@ bool Div::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Mod::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "Mod Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Second Operand
   const auto w = n.stack.top();
   // Pop Second Operand
@@ -179,6 +247,12 @@ bool Mod::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Ras::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 1) {
+    std::cerr << "Ras Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Operand
   const auto v = n.stack.top();
   // Pop Operand
@@ -191,6 +265,12 @@ bool Ras::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Jump::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 1) {
+    std::cerr << "Jump Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Operand
   const auto v = n.stack.top();
   // Pop Operand
@@ -227,12 +307,23 @@ bool Jump::execute(Network &nn, Neuron &n, State &s, Action &a) {
 bool Goto::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Terminate Execution
   a.pc = -1;
+  // Check State Out-of-Bounds
+  if (state >= n.states.size()) {
+    std::cerr << "Goto Error: State Out-of-Bounds" << std::endl;
+    return false;
+  }
   // Transition to State
   n.state = state;
   return true;
 }
 
 bool Push::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Overflow
+  if (n.stack.size() >= 10) {
+    std::cerr << "Push Error: Stack Overflow" << std::endl;
+    return false;
+  }
+
   // Push Constant
   n.stack.push(constant);
   // Increment Program Counter
@@ -241,6 +332,12 @@ bool Push::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Drop::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 1) {
+    std::cerr << "Drop Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Pop Constant
   n.stack.pop();
   // Increment Program Counter
@@ -249,6 +346,18 @@ bool Drop::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Copy::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 1) {
+    std::cerr << "Copy Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
+  // Check Stack Overflow
+  if (n.stack.size() >= 10) {
+    std::cerr << "Copy Error: Stack Overflow" << std::endl;
+    return false;
+  }
+
   // Copy
   n.stack.push(n.stack.top());
   // Increment Program Counter
@@ -257,6 +366,12 @@ bool Copy::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Swap::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 2) {
+    std::cerr << "Swap Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Swap
   const auto w = n.stack.top();
   n.stack.pop();
@@ -270,6 +385,12 @@ bool Swap::execute(Network &nn, Neuron &n, State &s, Action &a) {
 }
 
 bool Send::execute(Network &nn, Neuron &n, State &s, Action &a) {
+  // Check Stack Underflow
+  if (n.stack.size() < 1) {
+    std::cerr << "Send Error: Stack Underflow" << std::endl;
+    return false;
+  }
+
   // Get Operand
   const auto v = n.stack.top();
   // Pop Operand

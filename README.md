@@ -47,7 +47,7 @@ Runs a neural network.
 Evolves a population of neural networks
 
 ```
-./build/Neuro evolve [options] <path-to-fitness-function-program>
+./build/Neuro evolve [options] <path-to-fitness-function>
 ```
 
 ## Help

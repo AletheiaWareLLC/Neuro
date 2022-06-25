@@ -1,13 +1,17 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include <string>
+
 #include <Neuro/dsl/lexer.h>
 #include <Neuro/network.h>
 
 class Parser {
 public:
   Lexer &lexer;
+
   Parser(Lexer &l) : lexer(l) {}
+
   bool parseLiteral(int &l);
   bool parseNetwork(Network &nn);
   bool parseNeuron(Neuron &n);

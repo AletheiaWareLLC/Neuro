@@ -1,8 +1,7 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 
-#include <cstddef>
-#include <iostream>
+#include <ostream>
 #include <string>
 
 #include <Neuro/data.h>
@@ -17,6 +16,7 @@ class Instruction {
 public:
   Instruction() {}
   virtual ~Instruction() = default;
+
   virtual bool execute(Network &nn, Neuron &n, State &s, Action &a) = 0;
   virtual bool emit(std::ostream &os) const = 0;
 };
@@ -103,7 +103,9 @@ public:
   };
   ConditionCode code;
   std::string label;
+
   Jump(ConditionCode c, std::string l) : code(c), label(l) {}
+
   bool execute(Network &nn, Neuron &n, State &s, Action &a) override;
   bool emit(std::ostream &os) const override;
 };
@@ -111,7 +113,9 @@ public:
 class Goto : public Instruction {
 public:
   uint state = 0;
+
   Goto(uint s) : state(s) {}
+
   bool execute(Network &nn, Neuron &n, State &s, Action &a) override;
   bool emit(std::ostream &os) const override;
 };
@@ -119,7 +123,9 @@ public:
 class Push : public Instruction {
 public:
   sbyte constant = 0;
+
   Push(sbyte c) : constant(c) {}
+
   bool execute(Network &nn, Neuron &n, State &s, Action &a) override;
   bool emit(std::ostream &os) const override;
 };

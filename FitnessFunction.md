@@ -2,20 +2,32 @@
 
 A fitness function is used to evaluate how well an individual in a population achieves a set of goals, and is used to guide an Evolutionary Algorithm towards an optimal solution.
 
-In Neuro, the fitness function is decoupled from the evolutionary algorithm and runs as its own program, communicating with the evolutionary algorithm via stdin/stdout.
+In Neuro, the fitness function is decoupled from the evolutionary algorithm and exists as a file containing pairs of question/answers.
 
-Each generation, the fitness function program is executed and must print a single line 'question' to stdout which is used as the input for all individuals in the population. Then it must repeadedly read a single line 'answer' representing the output from an individual from stdin and write a single line, non-negative 'error' to stdout, until there is no more input.
+Each generation, the fitness function is read and each 'question' is posed to each individual in the population. Then the output from each individual is compared with the corresponding 'answer' to get a non-negative 'error' used to compare the fitnesses of each individual. The evolutionary algorithm will attempt to arrive at a solution that results in the smallest (closest to 0) error.
 
-The general structure of a Fitness Function is;
+The general structure of a Fitness Function File is;
 
 ```
-std::cout << question << std::endl;
+>question1
+<answer1
 
-std::string answer;
-while (std::getline(std::cin, answer)) {
-    auto error = fitness(answer);
-    std::cout << error << std::endl;
-}
+>question2
+<answer2
+
+>question3
+<answer3
 ```
 
-The evolutionary algorithm will attempt to arrive at a solution that results in the smallest (closest to 0) error.
+For example;
+
+```
+>2+2
+<4
+
+>10-1
+<9
+
+>3*4
+<12
+```

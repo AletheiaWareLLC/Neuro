@@ -6,3 +6,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 project(NeuroSamples)
 
 add_executable(NeuroSamples_Absolute absolute/absolute.cpp)
+
+add_executable(NeuroSamples_Calculator calculator/calculator.cpp)

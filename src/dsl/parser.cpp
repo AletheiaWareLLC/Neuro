@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <Neuro/dsl/parser.h>
 
 bool Parser::parseLiteral(int &l) {
@@ -32,11 +34,19 @@ bool Parser::parseNetwork(Network &nn) {
       lexer.error() << "Negative Connection Source" << std::endl;
       return false;
     }
+    if (source >= nn.neurons.size()) {
+      lexer.error() << "Connection Source Out-of-Bounds" << std::endl;
+      return false;
+    }
     if (!parseLiteral(destination)) {
       return false;
     }
     if (destination < 0) {
       lexer.error() << "Negative Connection Destination" << std::endl;
+      return false;
+    }
+    if (destination >= nn.neurons.size()) {
+      lexer.error() << "Connection Destination Out-of-Bounds" << std::endl;
       return false;
     }
     // TODO support multiple destinations, eg;

@@ -2,7 +2,7 @@
 #define LEXER_H
 
 #include <fstream>
-#include <sstream>
+#include <ostream>
 #include <vector>
 
 #include <Neuro/network.h>
@@ -15,12 +15,19 @@ public:
   std::vector<Token> tokens;
   int index = 0;
   int line = 1;
+
   Lexer(std::ifstream &fin) : source(fin) { tokenize(); }
+
   void tokenize();
+
   void add(Token &&t);
+
   Token peek();
+
   Token move();
+
   bool match(Token::Category);
+
   std::ostream &error();
 };
 
