@@ -41,7 +41,7 @@ bool Parser::parseNetwork(Network &nn) {
     }
     // TODO support multiple destinations, eg;
     // connect 0 1 2 3 4
-    nn.connections[source].push_back(destination);
+    nn.connections[source].insert(destination);
   }
   return true;
 }

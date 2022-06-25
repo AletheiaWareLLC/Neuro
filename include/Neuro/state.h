@@ -9,12 +9,12 @@
 
 class State {
 public:
-  unsigned int id = 0;
+  uint id = 0;
   std::map<sbyte, Action> actions;
   std::optional<Action> wildcard;
 
   State() : id(0) {}
-  explicit State(unsigned int id) : id(id) {}
+  explicit State(uint id) : id(id) {}
   State(const State &s) : id(s.id), actions(s.actions), wildcard(s.wildcard) {}
   State(State &&s) : id(s.id), actions(s.actions), wildcard(s.wildcard) {}
   ~State() {}
@@ -34,7 +34,7 @@ public:
     return *this;
   }
 
-  bool emit(std::ostream &os);
+  bool emit(std::ostream &os) const;
 };
 
 #endif

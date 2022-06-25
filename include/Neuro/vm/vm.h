@@ -5,9 +5,9 @@
 
 class VM {
 public:
-  const unsigned int cycles;
-  VM(const unsigned int c) : cycles(c) {}
-  bool execute(Network &nn, Neuron &n, State &s, Action &a, unsigned int &c);
+  const uint cycles;
+  VM(const uint cs) : cycles(cs) {}
+  bool execute(Network &nn, Neuron &n, State &s, Action &a, uint &c);
   bool execute(Network &nn, const std::vector<sbyte> &input,
                std::vector<sbyte> &output);
 };

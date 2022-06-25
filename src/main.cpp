@@ -56,14 +56,14 @@ std::ostream &error() {
 }
 
 bool generate(std::vector<std::string> options, std::string parameter) {
-  int neurons = 5;
-  int states = 5;
-  int receivers = 5;
-  int instructions = 5;
-  int connections = 5;
+  uint neurons = 5;
+  uint states = 5;
+  uint receivers = 5;
+  uint instructions = 5;
+  uint connections = 5;
 
   // TODO Parse Options
-  for (auto o : options) {
+  for (const auto o : options) {
     std::cerr << "Option " << o << " not supported" << std::endl;
   }
 
@@ -88,10 +88,10 @@ bool generate(std::vector<std::string> options, std::string parameter) {
 }
 
 bool run(std::vector<std::string> options, std::string parameter) {
-  unsigned int cycles = 100;
+  uint cycles = 100;
 
   // TODO Parse Options
-  for (auto o : options) {
+  for (const auto o : options) {
     std::cerr << "Option " << o << " not supported" << std::endl;
   }
 
@@ -105,7 +105,7 @@ bool run(std::vector<std::string> options, std::string parameter) {
   Lexer lexer(source);
   Parser parser(lexer);
   Network nn;
-  auto result = parser.parseNetwork(nn);
+  const auto result = parser.parseNetwork(nn);
   source.close();
   if (!result) {
     return -1;
@@ -125,7 +125,7 @@ bool run(std::vector<std::string> options, std::string parameter) {
   std::string answer;
   while (std::getline(std::cin, answer)) {
     int i = 0;
-    for (auto c : answer) {
+    for (const auto c : answer) {
       if (i < ns) {
         input[i] = c;
         i++;
@@ -134,14 +134,14 @@ bool run(std::vector<std::string> options, std::string parameter) {
       }
     }
     if (vm.execute(nn, input, output)) {
-      for (auto o : output) {
+      for (const auto o : output) {
         if (o == '\n') {
           break;
         }
         std::cout << std::bitset<8>(o);
       }
       std::cout << std::endl;
-      for (auto o : output) {
+      for (const auto o : output) {
         if (o == '\n') {
           break;
         }
@@ -150,7 +150,7 @@ bool run(std::vector<std::string> options, std::string parameter) {
       std::cout << std::endl;
 
       std::cout << "Dump;" << std::endl;
-      for (auto n : nn.neurons) {
+      for (const auto n : nn.neurons) {
         n.dump();
       }
     }
@@ -159,8 +159,13 @@ bool run(std::vector<std::string> options, std::string parameter) {
 }
 
 int evolve(std::vector<std::string> options, std::string parameter) {
+  std::string directory = "./population";
+  uint population = 100;
+  uint generation = 100;
+  uint cycles = 100;
+
   // TODO Parse Options
-  for (auto o : options) {
+  for (const auto o : options) {
     std::cerr << "Option " << o << " not supported" << std::endl;
   }
 

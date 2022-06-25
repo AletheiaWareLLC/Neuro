@@ -6,7 +6,7 @@
 
 bool Not::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop Operand
   n.stack.pop();
   // Push Result
@@ -18,11 +18,11 @@ bool Not::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool And::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Second Operand
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   // Pop Second Operand
   n.stack.pop();
   // Get First Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop First Operand
   n.stack.pop();
   // Push Result
@@ -34,11 +34,11 @@ bool And::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Or::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Second Operand
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   // Pop Second Operand
   n.stack.pop();
   // Get First Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop First Operand
   n.stack.pop();
   // Push Result
@@ -50,11 +50,11 @@ bool Or::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Xor::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Second Operand
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   // Pop Second Operand
   n.stack.pop();
   // Get First Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop First Operand
   n.stack.pop();
   // Push Result
@@ -66,7 +66,7 @@ bool Xor::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Lls::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop Operand
   n.stack.pop();
   // Push Result
@@ -78,7 +78,7 @@ bool Lls::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Rls::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop Operand
   n.stack.pop();
   // Push Result
@@ -90,11 +90,11 @@ bool Rls::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Add::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Second Operand
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   // Pop Second Operand
   n.stack.pop();
   // Get First Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop First Operand
   n.stack.pop();
   // Push Result
@@ -106,11 +106,11 @@ bool Add::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Sub::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Second Operand
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   // Pop Second Operand
   n.stack.pop();
   // Get First Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop First Operand
   n.stack.pop();
   // Push Result
@@ -122,11 +122,11 @@ bool Sub::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Mul::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Second Operand
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   // Pop Second Operand
   n.stack.pop();
   // Get First Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop First Operand
   n.stack.pop();
   // Push Result
@@ -138,11 +138,11 @@ bool Mul::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Div::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Second Operand
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   // Pop Second Operand
   n.stack.pop();
   // Get First Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop First Operand
   n.stack.pop();
   // Check divisor
@@ -159,11 +159,11 @@ bool Div::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Mod::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Second Operand
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   // Pop Second Operand
   n.stack.pop();
   // Get First Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop First Operand
   n.stack.pop();
   // Check divisor
@@ -180,7 +180,7 @@ bool Mod::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Ras::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop Operand
   n.stack.pop();
   // Push Result
@@ -192,7 +192,7 @@ bool Ras::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Jump::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop Operand
   n.stack.pop();
 
@@ -258,9 +258,9 @@ bool Copy::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Swap::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Swap
-  auto w = n.stack.top();
+  const auto w = n.stack.top();
   n.stack.pop();
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   n.stack.pop();
   n.stack.push(w);
   n.stack.push(v);
@@ -271,16 +271,16 @@ bool Swap::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
 bool Send::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Operand
-  auto v = n.stack.top();
+  const auto v = n.stack.top();
   // Pop Operand
   n.stack.pop();
 
-  if (auto itr = nn.connections.find(n.id); itr == nn.connections.end()) {
+  if (const auto itr = nn.connections.find(n.id); itr == nn.connections.end()) {
     std::cerr << "Send Error: Neuron has no Connections" << std::endl;
     return false;
   } else {
     // Send Value via all Connections
-    for (auto c : itr->second) {
+    for (const auto c : itr->second) {
       nn.queue.push(std::make_pair(c, v));
     }
   }

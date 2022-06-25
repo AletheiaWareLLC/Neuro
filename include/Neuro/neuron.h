@@ -9,13 +9,13 @@
 
 class Neuron {
 public:
-  unsigned int id = 0;
-  unsigned int state = 0;
+  uint id = 0;
+  uint state = 0;
   std::vector<State> states;
   std::stack<sbyte> stack;
 
   Neuron() : id(0), state(0) {}
-  explicit Neuron(unsigned int id) : id(id), state(0) {}
+  explicit Neuron(uint id) : id(id), state(0) {}
 
   Neuron(const Neuron &n)
       : id(n.id), state(n.state), states(n.states), stack(n.stack) {}
@@ -37,8 +37,8 @@ public:
     return *this;
   }
 
-  bool emit(std::ostream &os);
-  void dump();
+  bool emit(std::ostream &os) const;
+  void dump() const;
 };
 
 #endif

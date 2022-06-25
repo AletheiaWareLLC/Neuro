@@ -11,9 +11,9 @@
 
 class Action {
 public:
-  unsigned int pc = 0;
+  uint pc = 0;
   std::vector<std::shared_ptr<Instruction>> instructions;
-  std::map<std::string, unsigned int> labels;
+  std::map<std::string, uint> labels;
   Action() {}
   Action(const Action &a)
       : pc(a.pc), instructions(a.instructions), labels(a.labels) {}
@@ -32,7 +32,7 @@ public:
     labels = a.labels;
     return *this;
   }
-  bool emit(std::ostream &os);
+  bool emit(std::ostream &os) const;
 };
 
 #endif

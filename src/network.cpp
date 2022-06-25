@@ -2,9 +2,9 @@
 
 #include <Neuro/network.h>
 
-bool Network::generate(unsigned int neurons, unsigned int connections,
-                       unsigned int states, unsigned int receivers,
-                       unsigned int instructions) {
+bool Network::generate(uint neurons, uint connections,
+                       uint states, uint receivers,
+                       uint instructions) {
   std::random_device rseed;
   std::mt19937 rng(rseed());
   std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),
@@ -22,7 +22,7 @@ bool Network::generate(unsigned int neurons, unsigned int connections,
 
         for (int iid = 0; iid < instructions; iid++) {
           // Generate random instructions
-          switch ((unsigned int)dist(rng) % 19) {
+          switch ((uint)dist(rng) % 19) {
           case 0:
             a.instructions.push_back(std::make_shared<Not>());
             break;
@@ -60,16 +60,16 @@ bool Network::generate(unsigned int neurons, unsigned int connections,
             a.instructions.push_back(std::make_shared<Ras>());
             break;
           case 12: {
-            auto cc = (Jump::ConditionCode)((unsigned int)dist(rng) % 4);
-            auto label = "l" + std::to_string(lid++);
+            const auto cc = (Jump::ConditionCode)((uint)dist(rng) % 4);
+            const auto label = "l" + std::to_string(lid++);
             a.instructions.push_back(std::make_shared<Jump>(cc, label));
             // Add label to action
-            a.labels[label] = (unsigned int)dist(rng) % instructions + 1;
+            a.labels[label] = (uint)dist(rng) % instructions + 1;
             break;
           }
           case 13:
             a.instructions.push_back(
-                std::make_shared<Goto>((unsigned int)dist(rng) % states));
+                std::make_shared<Goto>((uint)dist(rng) % states));
             break;
           case 14:
             a.instructions.push_back(std::make_shared<Push>((sbyte)dist(rng)));
@@ -101,9 +101,12 @@ bool Network::generate(unsigned int neurons, unsigned int connections,
 
     this->neurons.push_back(n);
   }
-  for (int cid = 0; cid < connections; cid++) {
-    this->connections[(unsigned int)dist(rng) % neurons].push_back(
-        (unsigned int)dist(rng) % neurons);
+  for (int cid = 0; cid < connections;) {
+    const auto source = (uint)dist(rng) % neurons;
+    const auto destination = (uint)dist(rng) % neurons;
+    if (this->connections[source].insert(destination).second) {
+      cid++; // Only increment if connection was successfully added to set
+    }
   }
   return true;
 }

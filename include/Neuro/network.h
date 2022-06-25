@@ -2,7 +2,9 @@
 #define NETWORK_H
 
 #include <cstddef>
+#include <map>
 #include <queue>
+#include <set>
 #include <vector>
 
 #include <Neuro/data.h>
@@ -11,8 +13,8 @@
 class Network {
 public:
   std::vector<Neuron> neurons;
-  std::map<unsigned int, std::vector<unsigned int>> connections;
-  std::queue<std::pair<unsigned int, sbyte>> queue;
+  std::map<uint, std::set<uint>> connections;
+  std::queue<std::pair<uint, sbyte>> queue;
 
   Network() {}
   Network(const Network &n)
@@ -33,12 +35,12 @@ public:
     return *this;
   }
 
-  bool generate(unsigned int neurons, unsigned int connections,
-                unsigned int states, unsigned int receivers,
-                unsigned int instructions);
+  bool generate(uint neurons, uint connections,
+                uint states, uint receivers,
+                uint instructions);
 
   void reset();
-  bool emit(std::ostream &os);
+  bool emit(std::ostream &os) const;
 };
 
 #endif

@@ -4,7 +4,7 @@
 #include <Neuro/network.h>
 #include <Neuro/vm/vm.h>
 
-bool VM::execute(Network &nn, Neuron &n, State &s, Action &a, unsigned int &c) {
+bool VM::execute(Network &nn, Neuron &n, State &s, Action &a, uint &c) {
   // Execute Action Instructions
   for (a.pc = 0; a.pc >= 0 && a.pc < a.instructions.size();) {
     // Check and Increment Cycle Counter
@@ -34,7 +34,7 @@ bool VM::execute(Network &nn, const std::vector<sbyte> &input,
     nn.queue.push(std::make_pair(i, input[i]));
   }
 
-  unsigned int c = 0;
+  uint c = 0;
 
   // Iterate Activated Neurons
   while (!nn.queue.empty()) {
