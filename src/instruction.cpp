@@ -67,12 +67,10 @@ bool Xor::execute(Network &nn, Neuron &n, State &s, Action &a) {
 bool Lls::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Get Operand
   auto v = n.stack.top();
-  std::cout << "LLS Popped: " << std::bitset<8>(v) << std::endl;
   // Pop Operand
   n.stack.pop();
   // Push Result
   n.stack.push(v << 1);
-  std::cout << "LLS Pushed: " << std::bitset<8>(n.stack.top()) << std::endl;
   // Increment Program Counter
   a.pc++;
   return true;
@@ -202,19 +200,23 @@ bool Jump::execute(Network &nn, Neuron &n, State &s, Action &a) {
   switch (code) {
   case Jump::ConditionCode::EZ:
     jump = v == 0;
+    break;
   case Jump::ConditionCode::NZ:
     jump = v != 0;
+    break;
   case Jump::ConditionCode::LE:
     jump = (v & 0b10000000) || (v == 0);
+    break;
   case Jump::ConditionCode::LZ:
     jump = (v & 0b10000000);
+    break;
   default:
     std::cerr << "Jump Error: Unrecognized Condition Code: " << (int)code
               << std::endl;
     return false;
   }
   if (jump) {
-    a.pc += a.labels[label] - a.pc;
+    a.pc = a.labels[label];
   } else {
     // Increment Program Counter
     a.pc++;

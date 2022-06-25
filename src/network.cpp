@@ -3,8 +3,8 @@
 #include <Neuro/network.h>
 
 bool Network::generate(unsigned int neurons, unsigned int connections,
-                      unsigned int states, unsigned int receivers,
-                      unsigned int instructions) {
+                       unsigned int states, unsigned int receivers,
+                       unsigned int instructions) {
   std::random_device rseed;
   std::mt19937 rng(rseed());
   std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),

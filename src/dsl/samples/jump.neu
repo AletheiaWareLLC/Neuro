@@ -1,0 +1,20 @@
+neuron 0 {
+    state 0 {
+        receive {
+            push 48
+            sub
+            jez #end
+            goto 1
+        #end
+        }
+    }
+    state 1 {
+        receive {
+            push 48
+            sub
+            jnz #end
+            goto 0
+        #end
+        }
+    }
+}

@@ -104,10 +104,7 @@ void Lexer::tokenize() {
   }
 }
 
-void Lexer::add(Token &&t) {
-  // std::cout << t << std::endl;
-  tokens.push_back(t);
-}
+void Lexer::add(Token &&t) { tokens.push_back(t); }
 
 Token Lexer::peek() {
   int i = index;

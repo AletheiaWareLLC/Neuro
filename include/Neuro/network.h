@@ -34,8 +34,8 @@ public:
   }
 
   bool generate(unsigned int neurons, unsigned int connections,
-               unsigned int states, unsigned int receivers,
-               unsigned int instructions);
+                unsigned int states, unsigned int receivers,
+                unsigned int instructions);
 
   void reset();
   bool emit(std::ostream &os);
