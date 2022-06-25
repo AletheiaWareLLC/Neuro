@@ -1,154 +1,141 @@
 #include <Neuro/dsl/parser.h>
 
-int Parser::parseLiteral(int &l) {
-  Token t = lexer.peek();
-  if (t.category == Token::Category::Literal) {
+bool Parser::parseLiteral(int &l) {
+  const Token t = lexer.peek();
+  if (t.is(Token::Category::Literal)) {
     l = std::stoi(t.value);
   }
   return lexer.match(Token::Category::Literal);
 }
 
-int Parser::parseNetwork(Network &nn) {
-  while (lexer.peek().category == Token::Category::Neuron) {
+bool Parser::parseNetwork(Network &nn) {
+  while (lexer.peek().is(Token::Category::Neuron)) {
     Neuron n;
-    auto result = parseNeuron(n);
-    if (result != 0) {
-      return result;
+    if (!parseNeuron(n)) {
+      return false;
     }
     if (n.id != nn.neurons.size()) {
-      std::cerr << "Error: Neuron ID Out-of-Order" << std::endl;
-      return -1;
+      lexer.error() << "Neuron ID Out-of-Order" << std::endl;
+      return false;
     }
     nn.neurons.push_back(n);
   }
 
-  while (lexer.peek().category == Token::Category::Connect) {
+  while (lexer.peek().is(Token::Category::Connect)) {
     lexer.move();
     int source = 0;
     int destination = 0;
-    auto result = parseLiteral(source);
-    if (result != 0) {
-      return result;
+    if (!parseLiteral(source)) {
+      return false;
     }
     if (source < 0) {
-      std::cerr << "Error: Negative Connection Source" << std::endl;
-      return -1;
+      lexer.error() << "Negative Connection Source" << std::endl;
+      return false;
     }
-    result = parseLiteral(destination);
-    if (result != 0) {
-      return result;
+    if (!parseLiteral(destination)) {
+      return false;
     }
     if (destination < 0) {
-      std::cerr << "Error: Negative Connection Destination" << std::endl;
-      return -1;
+      lexer.error() << "Negative Connection Destination" << std::endl;
+      return false;
     }
     // TODO support multiple destinations, eg;
     // connect 0 1 2 3 4
     nn.connections[source].push_back(destination);
   }
-  return 0;
+  return true;
 }
 
-int Parser::parseNeuron(Neuron &n) {
-  auto result = lexer.match(Token::Category::Neuron);
-  if (result != 0) {
-    return result;
+bool Parser::parseNeuron(Neuron &n) {
+  if (!lexer.match(Token::Category::Neuron)) {
+    return false;
   }
 
   int nid;
-  result = parseLiteral(nid);
-  if (result != 0) {
-    return result;
+  if (!parseLiteral(nid)) {
+    return false;
   }
   if (nid < 0) {
-    std::cerr << "Error: Negative Neuron ID" << std::endl;
-    return -1;
+    lexer.error() << "Negative Neuron ID" << std::endl;
+    return false;
   }
   n.id = nid;
 
-  result = lexer.match(Token::Category::Ocb);
-  if (result != 0) {
-    return result;
+  if (!lexer.match(Token::Category::Ocb)) {
+    return false;
   }
 
-  while (lexer.peek().category != Token::Category::Ccb) {
+  while (!lexer.peek().is(Token::Category::Ccb)) {
     State s;
-    result = parseState(s);
-    if (result != 0) {
-      return result;
+    if (!parseState(s)) {
+      return false;
     }
     if (s.id != n.states.size()) {
-      std::cerr << "Error: State ID Out-of-Order" << std::endl;
-      return -1;
+      lexer.error() << "State ID Out-of-Order" << std::endl;
+      return false;
     }
     n.states.push_back(s);
   }
   return lexer.match(Token::Category::Ccb);
 }
 
-int Parser::parseState(State &s) {
-  auto result = lexer.match(Token::Category::State);
-  if (result != 0) {
-    return result;
+bool Parser::parseState(State &s) {
+  if (!lexer.match(Token::Category::State)) {
+    return false;
   }
 
   int sid;
-  result = parseLiteral(sid);
-  if (result != 0) {
-    return result;
+  if (!parseLiteral(sid)) {
+    return false;
   }
   if (sid < 0) {
-    std::cerr << "Error: Negative State ID" << std::endl;
-    return -1;
+    lexer.error() << "Negative State ID" << std::endl;
+    return false;
   }
   s.id = sid;
 
-  result = lexer.match(Token::Category::Ocb);
-  if (result != 0) {
-    return result;
+  if (!lexer.match(Token::Category::Ocb)) {
+    return false;
   }
 
   // Parse Actions
-  while (lexer.peek().category != Token::Category::Ccb) {
+  while (!lexer.peek().is(Token::Category::Ccb)) {
     Action a;
 
-    result = lexer.match(Token::Category::Receive);
-    if (result != 0) {
-      return result;
+    if (!lexer.match(Token::Category::Receive)) {
+      return false;
     }
 
     bool wildcard = false;
     int pattern;
-    if (lexer.peek().category == Token::Category::Ocb) {
+    if (lexer.peek().is(Token::Category::Ocb)) {
       wildcard = true;
     } else {
-      result = parseLiteral(pattern);
-      if (result != 0) {
-        return result;
+      if (!parseLiteral(pattern)) {
+        return false;
       }
     }
 
-    result = lexer.match(Token::Category::Ocb);
-    if (result != 0) {
-      return result;
+    if (!lexer.match(Token::Category::Ocb)) {
+      return false;
     }
 
     // Parse instructions
     int pc = 0;
-    while (lexer.peek().category != Token::Category::Ccb) {
-      if (lexer.peek().category == Token::Category::Label) {
-        result = parseLabel(a, pc);
+    while (!lexer.peek().is(Token::Category::Ccb)) {
+      if (lexer.peek().is(Token::Category::Label)) {
+        if (!parseLabel(a, pc)) {
+          return false;
+        }
       } else {
-        result = parseInstruction(a);
+        if (!parseInstruction(a)) {
+          return false;
+        }
         pc++;
       }
-      if (result != 0) {
-        return result;
-      }
     }
-    result = lexer.match(Token::Category::Ccb);
-    if (result != 0) {
-      return result;
+    if (!lexer.match(Token::Category::Ccb)) {
+      return false;
     }
 
     if (wildcard) {
@@ -160,20 +147,20 @@ int Parser::parseState(State &s) {
   return lexer.match(Token::Category::Ccb);
 }
 
-int Parser::parseLabel(std::string &l) {
-  Token t = lexer.move();
+bool Parser::parseLabel(std::string &l) {
+  const Token t = lexer.move();
   l = t.value;
-  return 0;
+  return true;
 }
 
-int Parser::parseLabel(Action &a, int pc) {
-  Token t = lexer.move();
+bool Parser::parseLabel(Action &a, int pc) {
+  const Token t = lexer.move();
   a.labels[t.value] = pc;
-  return 0;
+  return true;
 }
 
-int Parser::parseInstruction(Action &a) {
-  Token t = lexer.move();
+bool Parser::parseInstruction(Action &a) {
+  const Token t = lexer.move();
   std::shared_ptr<Instruction> i;
   switch (t.category) {
   case Token::Category::Not:
@@ -214,58 +201,52 @@ int Parser::parseInstruction(Action &a) {
     break;
   case Token::Category::Jez: {
     std::string label;
-    auto result = parseLabel(label);
-    if (result != 0) {
-      return result;
+    if (!parseLabel(label)) {
+      return false;
     }
     i = std::make_shared<Jump>(Jump::ConditionCode::EZ, label);
     break;
   }
   case Token::Category::Jnz: {
     std::string label;
-    auto result = parseLabel(label);
-    if (result != 0) {
-      return result;
+    if (!parseLabel(label)) {
+      return false;
     }
     i = std::make_shared<Jump>(Jump::ConditionCode::NZ, label);
     break;
   }
   case Token::Category::Jle: {
     std::string label;
-    auto result = parseLabel(label);
-    if (result != 0) {
-      return result;
+    if (!parseLabel(label)) {
+      return false;
     }
     i = std::make_shared<Jump>(Jump::ConditionCode::LE, label);
     break;
   }
   case Token::Category::Jlz: {
     std::string label;
-    auto result = parseLabel(label);
-    if (result != 0) {
-      return result;
+    if (!parseLabel(label)) {
+      return false;
     }
     i = std::make_shared<Jump>(Jump::ConditionCode::LZ, label);
     break;
   }
   case Token::Category::Goto: {
     int state;
-    auto result = parseLiteral(state);
-    if (result != 0) {
-      return result;
+    if (!parseLiteral(state)) {
+      return false;
     }
     if (state < 0) {
-      std::cerr << "Error: Negative Next State" << std::endl;
-      return -1;
+      lexer.error() << "Negative Next State" << std::endl;
+      return false;
     }
     i = std::make_shared<Goto>(state);
     break;
   }
   case Token::Category::Push: {
     int constant = 0;
-    auto result = parseLiteral(constant);
-    if (result != 0) {
-      return result;
+    if (!parseLiteral(constant)) {
+      return false;
     }
     // TODO ensure constant in within sbyte range
     i = std::make_shared<Push>(constant);
@@ -284,9 +265,9 @@ int Parser::parseInstruction(Action &a) {
     i = std::make_shared<Send>();
     break;
   default:
-    std::cerr << "Error: Unrecognized Instruction: " << t.value << std::endl;
-    return -1;
+    lexer.error() << "Unrecognized Instruction: " << t << std::endl;
+    return false;
   }
   a.instructions.push_back(i);
-  return 0;
+  return true;
 }

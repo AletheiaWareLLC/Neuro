@@ -149,6 +149,7 @@ bool Div::execute(Network &nn, Neuron &n, State &s, Action &a) {
   n.stack.pop();
   // Check divisor
   if (w == 0) {
+    std::cerr << "Division Error: Division by Zero" << std::endl;
     return false;
   }
   // Push Result
@@ -169,6 +170,7 @@ bool Mod::execute(Network &nn, Neuron &n, State &s, Action &a) {
   n.stack.pop();
   // Check divisor
   if (w == 0) {
+    std::cerr << "Modulo Error: Modulo by Zero" << std::endl;
     return false;
   }
   // Push Result
@@ -207,6 +209,8 @@ bool Jump::execute(Network &nn, Neuron &n, State &s, Action &a) {
   case Jump::ConditionCode::LZ:
     jump = (v & 0b10000000);
   default:
+    std::cerr << "Jump Error: Unrecognized Condition Code: " << (int)code
+              << std::endl;
     return false;
   }
   if (jump) {
@@ -270,7 +274,7 @@ bool Send::execute(Network &nn, Neuron &n, State &s, Action &a) {
   n.stack.pop();
 
   if (auto itr = nn.connections.find(n.id); itr == nn.connections.end()) {
-    // No Connections
+    std::cerr << "Send Error: Neuron has no Connections" << std::endl;
     return false;
   } else {
     // Send Value via all Connections

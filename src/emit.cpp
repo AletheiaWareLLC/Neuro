@@ -35,13 +35,13 @@ bool Neuron::emit(std::ostream &os) {
 bool State::emit(std::ostream &os) {
   os << "\tstate " << id << " {\n";
   for (auto [p, a] : actions) {
-    os << "\t\trecieve " << (int)p << " ";
+    os << "\t\treceive " << (int)p << " ";
     if (!a.emit(os)) {
       return false;
     }
   }
   if (wildcard) {
-    os << "\t\trecieve ";
+    os << "\t\treceive ";
     if (!wildcard->emit(os)) {
       return false;
     }
@@ -150,7 +150,8 @@ bool Jump::emit(std::ostream &os) {
     os << "jlz ";
     break;
   default:
-    std::cerr << "Unrecognized Jump Condition Code: " << (int)code << std::endl;
+    std::cerr << "Emit Error: Unrecognized Jump Condition Code: " << (int)code
+              << std::endl;
     return false;
   }
   os << "#" << label << '\n';

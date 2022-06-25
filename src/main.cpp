@@ -50,7 +50,7 @@ void help(std::string name, std::string command) {
   }
 }
 
-int generate(std::vector<std::string> options, std::string parameter) {
+bool generate(std::vector<std::string> options, std::string parameter) {
   int neurons = 5;
   int states = 5;
   int receivers = 5;
@@ -63,28 +63,27 @@ int generate(std::vector<std::string> options, std::string parameter) {
   }
 
   if (parameter.size() == 0) {
-    std::cerr << "Missing <path-to-destination-file> parameter\n";
+    std::cerr
+        << "Command Error: Missing <path-to-destination-file> parameter\n";
     return -1;
   }
 
   Network nn;
-  auto result =
-      nn.generate(connections, neurons, states, receivers, instructions);
-  if (result != 0) {
-    return result;
+  if (!nn.generate(connections, neurons, states, receivers, instructions)) {
+    return -1;
   }
 
   std::ofstream destination;
   destination.open(parameter);
-  result = nn.emit(destination);
+  auto result = nn.emit(destination);
   destination.close();
-  if (result != 0) {
-    return result;
+  if (!result) {
+    return -1;
   }
   return 0;
 }
 
-int run(std::vector<std::string> options, std::string parameter) {
+bool run(std::vector<std::string> options, std::string parameter) {
   unsigned int cycles = 100;
 
   // TODO Parse Options
@@ -93,7 +92,7 @@ int run(std::vector<std::string> options, std::string parameter) {
   }
 
   if (parameter.size() == 0) {
-    std::cerr << "Missing <path-to-source-file> parameter\n";
+    std::cerr << "Command Error: Missing <path-to-source-file> parameter\n";
     return -1;
   }
 
@@ -104,8 +103,8 @@ int run(std::vector<std::string> options, std::string parameter) {
   Network nn;
   auto result = parser.parseNetwork(nn);
   source.close();
-  if (result != 0) {
-    return result;
+  if (!result) {
+    return -1;
   }
 
   std::cout << "Network:\n";
@@ -150,8 +149,6 @@ int run(std::vector<std::string> options, std::string parameter) {
       for (auto n : nn.neurons) {
         n.dump();
       }
-    } else {
-      std::cout << "Fail" << std::endl;
     }
   }
   return 0;
@@ -164,7 +161,8 @@ int evolve(std::vector<std::string> options, std::string parameter) {
   }
 
   if (parameter.size() == 0) {
-    std::cerr << "Missing <path-to-fitness-function-program> parameter\n";
+    std::cerr << "Command Error: Missing <path-to-fitness-function-program> "
+                 "parameter\n";
     return -1;
   }
 

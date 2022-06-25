@@ -1,11 +1,20 @@
 #include <Neuro/dsl/token.h>
 #include <iostream>
 
+bool Token::is(Category c) const { return category == c; }
+
 std::ostream &operator<<(std::ostream &out, const Token::Category category) {
   std::map<Token::Category, std::string> categories = {
-      {Token::Category::NewLine, "\n"},
-      {Token::Category::Ocb, "{"},
-      {Token::Category::Ccb, "}"},
+      {Token::Category::EndOfFile, "endoffile"},
+      {Token::Category::NewLine, "newline"},
+      {Token::Category::Ocb, "opencurlybrace"},
+      {Token::Category::Ccb, "closecurlybrace"},
+      {Token::Category::Plus, "plus"},
+      {Token::Category::Minus, "minus"},
+      {Token::Category::Quote, "quote"},
+      {Token::Category::Literal, "literal"},
+      {Token::Category::Label, "label"},
+      {Token::Category::Comment, "comment"},
       {Token::Category::Neuron, "neuron"},
       {Token::Category::State, "state"},
       {Token::Category::Receive, "receive"},
@@ -34,4 +43,8 @@ std::ostream &operator<<(std::ostream &out, const Token::Category category) {
       {Token::Category::Send, "send"},
   };
   return out << categories[category];
+}
+
+std::ostream &operator<<(std::ostream &out, const Token token) {
+  return out << token.category << ":" << token.value;
 }
