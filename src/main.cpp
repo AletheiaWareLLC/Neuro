@@ -50,6 +50,11 @@ void help(std::string name, std::string command) {
   }
 }
 
+std::ostream &error() {
+  std::cerr << "Command Error: ";
+  return std::cerr;
+}
+
 bool generate(std::vector<std::string> options, std::string parameter) {
   int neurons = 5;
   int states = 5;
@@ -63,8 +68,7 @@ bool generate(std::vector<std::string> options, std::string parameter) {
   }
 
   if (parameter.size() == 0) {
-    std::cerr
-        << "Command Error: Missing <path-to-destination-file> parameter\n";
+    error() << "Missing <path-to-destination-file> parameter\n";
     return -1;
   }
 
@@ -92,7 +96,7 @@ bool run(std::vector<std::string> options, std::string parameter) {
   }
 
   if (parameter.size() == 0) {
-    std::cerr << "Command Error: Missing <path-to-source-file> parameter\n";
+    error() << "Missing <path-to-source-file> parameter\n";
     return -1;
   }
 
@@ -161,8 +165,7 @@ int evolve(std::vector<std::string> options, std::string parameter) {
   }
 
   if (parameter.size() == 0) {
-    std::cerr << "Command Error: Missing <path-to-fitness-function-program> "
-                 "parameter\n";
+    error() << "Missing <path-to-fitness-function-program> parameter\n";
     return -1;
   }
 
