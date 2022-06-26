@@ -1,3 +1,5 @@
+#include <bitset>
+
 #include <Neuro/neuron.h>
 
 void Neuron::dump() {
