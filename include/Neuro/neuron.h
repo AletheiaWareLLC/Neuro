@@ -6,41 +6,37 @@
 #include <vector>
 
 #include <Neuro/data.h>
+#include <Neuro/random.h>
 #include <Neuro/state.h>
+
+constexpr auto StackLimit = 100;
 
 class Neuron {
 public:
   uint id = 0;
   uint state = 0;
-  std::vector<State> states;
+  std::vector<std::unique_ptr<State>> states;
   std::stack<sbyte> stack;
 
   Neuron() : id(0), state(0) {}
   explicit Neuron(uint id) : id(id), state(0) {}
-  Neuron(const Neuron &n)
-      : id(n.id), state(n.state), states(n.states), stack(n.stack) {}
-  Neuron(Neuron &&n)
-      : id(n.id), state(n.state), states(n.states), stack(n.stack) {}
+  Neuron(const Neuron &n) = delete;
+  Neuron(Neuron &&n) = delete;
   ~Neuron() {}
-  Neuron &operator=(const Neuron &n) {
-    id = n.id;
-    state = n.state;
-    states = n.states;
-    stack = n.stack;
-    return *this;
-  }
-  Neuron &operator=(Neuron &&n) {
-    id = n.id;
-    state = n.state;
-    states = n.states;
-    stack = n.stack;
-    return *this;
-  }
 
-  bool generate(uint states = 3, uint receivers = 3, uint instructions = 3);
+  bool duplicate(const Neuron &n);
+
+  bool generate(Random &rng, const uint states, const uint actions,
+                const uint instructions);
+
+  bool mate(Random &rng, const Neuron &a, const Neuron &b);
+
+  bool addState(Random &rng, const uint actions, const uint instructions);
+
+  bool removeState(const uint id);
 
   bool emit(std::ostream &os) const;
-  void dump() const;
+  void dump(std::ostream &out) const;
 };
 
 #endif

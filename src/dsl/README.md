@@ -1,35 +1,36 @@
 # Neuro DSL
 
-Neuro uses a Domain-Specific Language to define Neural Networks of Pushdown Automaton.
+Neuro uses a Domain-Specific Language to define Neural Networks of Pushdown Automatons.
 
-There are two main parts to a `.neu` file; a set of Neurons and a set of Connections.
+There are two main parts to a `.neu` file; a set of Neurons and a set of Links.
 
 ## Neurons
 
 A Neuron is created with the keyword `neuron` followed by a globally unique identifier, followed by a block of state definitions.
 
-A state is created with the keyword `state` followed by a locally unique identifier, followed by a block of receivers.
+A state is created with the keyword `state` followed by a locally unique identifier, followed by a block of actions.
 
-A receiver is created with the keyword `receive` followed by an optional pattern, followed by a block of instructions.
+An action is created with the keyword `action` followed by an optional pattern, followed by a block of instructions.
 
 For example;
 ```
 neuron 0 {
     state 0 {
-        receive {
+        action {
             sub
             copy
-            jez #end
+            jez $end
             goto 1
-            #end
+            $end
         }
     }
     state 1 {
-        receive 0 {
+        action 0 {
             drop
+            # This is a comment
             goto 0
         }
-        receive {
+        action {
             send
         }
     }
@@ -37,20 +38,35 @@ neuron 0 {
 
 neuron 1 {
     state 0 {
-        receive {
+        action {
             swap
-            drop
+            drop # Another comment
+        }
+    }
+}
+
+neuron 2 {
+    state 0 {
+        action {
+            goto 1
+        }
+    }
+    state 1 {
+        action {
+            push 1
+            add
+            send
         }
     }
 }
 ```
 
-## Connections
+## Links
 
-A unidirectional Connection is established between to Neurons with the keyword `connect` followed by the ID of the source and destination Neurons.
+A unidirectional Link is established between two Neurons with the keyword `link` followed by the ID of the source and destination Neurons.
 
-For example, to create a Connection from Neuron 0 to Neuron 1 use;
+For example, to create a Link from Neuron 0 to Neurons 1 and 2 use;
 
 ```
-connect 0 1
+link 0 {1 2}
 ```

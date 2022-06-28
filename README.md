@@ -13,12 +13,9 @@ cmake --build build
 
 ## Test
 
-```cmake
-cmake -S test -B build/test
-cmake --build build/test/
-(cd build/test/ && ctest)
 ```
-
+(cd build/test/src && ctest)
+```
 
 # Usage
 

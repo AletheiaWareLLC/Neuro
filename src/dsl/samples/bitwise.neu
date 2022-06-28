@@ -1,6 +1,6 @@
 neuron 0 {
     state 0 {
-        receive {
+        action {
             not
             send
         }
@@ -9,9 +9,8 @@ neuron 0 {
 
 neuron 1 {
     state 0 {
-        receive {
+        action {
             and
-            copy
             send
         }
     }
@@ -19,9 +18,8 @@ neuron 1 {
 
 neuron 2 {
     state 0 {
-        receive {
+        action {
             or
-            copy
             send
         }
     }
@@ -29,9 +27,8 @@ neuron 2 {
 
 neuron 3 {
     state 0 {
-        receive {
+        action {
             xor
-            copy
             send
         }
     }
@@ -39,17 +36,17 @@ neuron 3 {
 
 neuron 4 {
     state 0 {
-        receive {
+        action {
             swap
             drop
         }
     }
 }
 
-connect 0 1
-connect 0 2
-connect 0 3
-connect 1 2
-connect 1 3
-connect 2 3
-connect 3 4
+link 0 {1}
+link 0 {2}
+link 0 {3}
+link 1 {2}
+link 1 {3}
+link 2 {3}
+link 3 {4}

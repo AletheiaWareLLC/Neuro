@@ -20,8 +20,8 @@ public:
     Quote,
     Neuron,
     State,
-    Receive,
-    Connect,
+    Action,
+    Link,
     // Instructions
     Not,
     And,

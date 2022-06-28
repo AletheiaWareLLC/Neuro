@@ -1,7 +1,7 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <fstream>
+#include <istream>
 #include <ostream>
 #include <vector>
 
@@ -11,14 +11,11 @@
 
 class Lexer {
 public:
-  std::ifstream &source;
   std::vector<Token> tokens;
   int index = 0;
   int line = 1;
 
-  Lexer(std::ifstream &fin) : source(fin) { tokenize(); }
-
-  void tokenize();
+  bool tokenize(std::istream &in);
 
   void add(Token &&t);
 

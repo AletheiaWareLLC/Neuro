@@ -16,7 +16,7 @@ public:
 
   bool execute(Network &nn, Neuron &n, State &s, Action &a, uint &c) const;
   bool execute(Network &nn, const std::vector<sbyte> &input,
-               std::vector<sbyte> &output) const;
+               std::vector<sbyte> &output, uint &c) const;
 };
 
 #endif

@@ -1,8 +1,8 @@
 neuron 0 {
     state 0 {
         action {
-            rls
-            send
+            push 48
+            sub
         }
     }
 }

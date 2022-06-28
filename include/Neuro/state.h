@@ -7,32 +7,30 @@
 
 #include <Neuro/action.h>
 #include <Neuro/data.h>
+#include <Neuro/random.h>
 
 class State {
 public:
   uint id = 0;
-  std::map<sbyte, Action> actions;
-  std::optional<Action> wildcard;
+  std::map<sbyte, std::unique_ptr<Action>> actions;
+  std::optional<std::unique_ptr<Action>> wildcard;
 
   State() : id(0) {}
   explicit State(uint id) : id(id) {}
-  State(const State &s) : id(s.id), actions(s.actions), wildcard(s.wildcard) {}
-  State(State &&s) : id(s.id), actions(s.actions), wildcard(s.wildcard) {}
+  State(const State &s) = delete;
+  State(State &&s) = delete;
   ~State() {}
-  State &operator=(const State &s) {
-    id = s.id;
-    actions = s.actions;
-    wildcard = s.wildcard;
-    return *this;
-  }
-  State &operator=(State &&s) {
-    id = s.id;
-    actions = s.actions;
-    wildcard = s.wildcard;
-    return *this;
-  }
 
-  bool generate(uint states, uint receivers = 3, uint instructions = 3);
+  bool duplicate(const State &s);
+
+  bool generate(Random &rng, const uint states, const uint actions,
+                const uint instructions);
+
+  bool mate(Random &rng, const State &a, const State &b);
+
+  bool addAction(Random &rng, const uint states, const uint instructions);
+
+  bool removeAction(const sint id);
 
   bool emit(std::ostream &os) const;
 };

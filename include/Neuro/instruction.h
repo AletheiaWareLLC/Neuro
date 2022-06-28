@@ -101,8 +101,8 @@ public:
     LE,
     LZ,
   };
-  ConditionCode code;
-  std::string label;
+  const ConditionCode code;
+  const std::string label;
 
   Jump(ConditionCode c, std::string l) : code(c), label(l) {}
 
@@ -112,7 +112,7 @@ public:
 
 class Goto : public Instruction {
 public:
-  uint state = 0;
+  const uint state = 0;
 
   Goto(uint s) : state(s) {}
 
@@ -122,7 +122,7 @@ public:
 
 class Push : public Instruction {
 public:
-  sbyte constant = 0;
+  const sbyte constant = 0;
 
   Push(sbyte c) : constant(c) {}
 

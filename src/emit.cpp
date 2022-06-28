@@ -7,17 +7,25 @@
 #include <Neuro/state.h>
 
 bool Network::emit(std::ostream &os) const {
-  for (const auto n : neurons) {
-    if (!n.emit(os)) {
+  for (const auto &n : neurons) {
+    if (!n->emit(os)) {
       return false;
     }
     os << '\n';
   }
 
-  for (const auto [k, v] : connections) {
+  for (const auto &[k, v] : links) {
+    os << "link " << k << " {";
+    bool first = true;
     for (const auto c : v) {
-      os << "connect " << k << " " << c << '\n';
+      if (first) {
+        first = false;
+      } else {
+        os << ' ';
+      }
+      os << c;
     }
+    os << "}\n";
   }
   os << '\n';
   return true;
@@ -25,8 +33,8 @@ bool Network::emit(std::ostream &os) const {
 
 bool Neuron::emit(std::ostream &os) const {
   os << "neuron " << id << " {\n";
-  for (const auto s : states) {
-    if (!s.emit(os)) {
+  for (const auto &s : states) {
+    if (!s->emit(os)) {
       return false;
     }
   }
@@ -36,15 +44,15 @@ bool Neuron::emit(std::ostream &os) const {
 
 bool State::emit(std::ostream &os) const {
   os << "\tstate " << id << " {\n";
-  for (const auto [p, a] : actions) {
-    os << "\t\treceive " << (int)p << " ";
-    if (!a.emit(os)) {
+  for (const auto &p : actions) {
+    os << "\t\taction " << (int)p.first << " ";
+    if (!p.second->emit(os)) {
       return false;
     }
   }
   if (wildcard) {
-    os << "\t\treceive ";
-    if (!wildcard->emit(os)) {
+    os << "\t\taction ";
+    if (!wildcard.value()->emit(os)) {
       return false;
     }
   }
@@ -55,14 +63,14 @@ bool State::emit(std::ostream &os) const {
 bool Action::emit(std::ostream &os) const {
   // Reverse label map
   std::map<uint, std::vector<std::string>> ls;
-  for (auto [k, v] : labels) {
+  for (const auto &[k, v] : labels) {
     ls[v].push_back(k);
   }
   os << "{\n";
   int pc = 0;
-  for (const auto i : instructions) {
-    for (const auto l : ls[pc]) {
-      os << "\t\t#" << l << '\n';
+  for (const auto &i : instructions) {
+    for (const auto &l : ls[pc]) {
+      os << "\t\t$" << l << '\n';
     }
     os << "\t\t\t";
     if (!i->emit(os)) {
@@ -70,8 +78,8 @@ bool Action::emit(std::ostream &os) const {
     }
     pc++;
   }
-  for (const auto l : ls[pc]) {
-    os << "\t\t#" << l << '\n';
+  for (const auto &l : ls[pc]) {
+    os << "\t\t$" << l << '\n';
   }
   os << "\t\t}\n";
   return true;
@@ -156,7 +164,7 @@ bool Jump::emit(std::ostream &os) const {
               << std::endl;
     return false;
   }
-  os << "#" << label << '\n';
+  os << "$" << label << '\n';
   return true;
 }
 

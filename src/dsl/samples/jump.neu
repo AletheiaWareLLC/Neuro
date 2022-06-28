@@ -1,20 +1,20 @@
 neuron 0 {
     state 0 {
-        receive {
+        action {
             push 48
             sub
-            jez #end
+            jez $end
             goto 1
-        #end
+        $end
         }
     }
     state 1 {
-        receive {
+        action {
             push 48
             sub
-            jnz #end
+            jnz $end
             goto 0
-        #end
+        $end
         }
     }
 }

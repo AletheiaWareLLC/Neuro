@@ -12,46 +12,53 @@ bool Parser::parseLiteral(int &l) {
 
 bool Parser::parseNetwork(Network &nn) {
   while (lexer.peek().is(Token::Category::Neuron)) {
-    Neuron n;
-    if (!parseNeuron(n)) {
+    auto n = std::make_unique<Neuron>();
+
+    if (!parseNeuron(*n)) {
       return false;
     }
-    if (n.id != nn.neurons.size()) {
+    if (n->id != nn.neurons.size()) {
       lexer.error() << "Neuron ID Out-of-Order" << std::endl;
       return false;
     }
-    nn.neurons.push_back(n);
+    nn.neurons.push_back(std::move(n));
   }
 
-  while (lexer.peek().is(Token::Category::Connect)) {
+  while (lexer.peek().is(Token::Category::Link)) {
     lexer.move();
     int source = 0;
-    int destination = 0;
     if (!parseLiteral(source)) {
       return false;
     }
     if (source < 0) {
-      lexer.error() << "Negative Connection Source" << std::endl;
+      lexer.error() << "Negative Link Source" << std::endl;
       return false;
     }
     if (source >= nn.neurons.size()) {
-      lexer.error() << "Connection Source Out-of-Bounds" << std::endl;
+      lexer.error() << "Link Source Out-of-Bounds" << std::endl;
       return false;
     }
-    if (!parseLiteral(destination)) {
+    if (!lexer.match(Token::Category::Ocb)) {
       return false;
     }
-    if (destination < 0) {
-      lexer.error() << "Negative Connection Destination" << std::endl;
+    while (!lexer.peek().is(Token::Category::Ccb)) {
+      int destination = 0;
+      if (!parseLiteral(destination)) {
+        return false;
+      }
+      if (destination < 0) {
+        lexer.error() << "Negative Link Destination" << std::endl;
+        return false;
+      }
+      if (destination >= nn.neurons.size()) {
+        lexer.error() << "Link Destination Out-of-Bounds" << std::endl;
+        return false;
+      }
+      nn.links[source].insert(destination);
+    }
+    if (!lexer.match(Token::Category::Ccb)) {
       return false;
     }
-    if (destination >= nn.neurons.size()) {
-      lexer.error() << "Connection Destination Out-of-Bounds" << std::endl;
-      return false;
-    }
-    // TODO support multiple destinations, eg;
-    // connect 0 1 2 3 4
-    nn.connections[source].insert(destination);
   }
   return true;
 }
@@ -76,15 +83,15 @@ bool Parser::parseNeuron(Neuron &n) {
   }
 
   while (!lexer.peek().is(Token::Category::Ccb)) {
-    State s;
-    if (!parseState(s)) {
+    auto s = std::make_unique<State>();
+    if (!parseState(*s)) {
       return false;
     }
-    if (s.id != n.states.size()) {
+    if (s->id != n.states.size()) {
       lexer.error() << "State ID Out-of-Order" << std::endl;
       return false;
     }
-    n.states.push_back(s);
+    n.states.push_back(std::move(s));
   }
   return lexer.match(Token::Category::Ccb);
 }
@@ -110,9 +117,9 @@ bool Parser::parseState(State &s) {
 
   // Parse Actions
   while (!lexer.peek().is(Token::Category::Ccb)) {
-    Action a;
+    auto a = std::make_unique<Action>();
 
-    if (!lexer.match(Token::Category::Receive)) {
+    if (!lexer.match(Token::Category::Action)) {
       return false;
     }
 
@@ -134,11 +141,11 @@ bool Parser::parseState(State &s) {
     int pc = 0;
     while (!lexer.peek().is(Token::Category::Ccb)) {
       if (lexer.peek().is(Token::Category::Label)) {
-        if (!parseLabel(a, pc)) {
+        if (!parseLabel(*a, pc)) {
           return false;
         }
       } else {
-        if (!parseInstruction(a)) {
+        if (!parseInstruction(*a)) {
           return false;
         }
         pc++;
@@ -149,9 +156,9 @@ bool Parser::parseState(State &s) {
     }
 
     if (wildcard) {
-      s.wildcard = std::make_optional(a);
+      s.wildcard = std::move(a);
     } else {
-      s.actions[pattern] = a;
+      s.actions[pattern] = std::move(a);
     }
   }
   return lexer.match(Token::Category::Ccb);
@@ -258,7 +265,11 @@ bool Parser::parseInstruction(Action &a) {
     if (!parseLiteral(constant)) {
       return false;
     }
-    // TODO ensure constant in within sbyte range
+    // Ensure constant in within sbyte range
+    if (constant < -128 || constant > 127) {
+      lexer.error() << "Constant Out-of-Range: " << constant << std::endl;
+      return false;
+    }
     i = std::make_shared<Push>(constant);
     break;
   }

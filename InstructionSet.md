@@ -26,7 +26,7 @@ jlz #label - pop one, jump to label if less than zero
 
 ## State
 goto state - transitions to given state
-Note: transitioning states will terminate execution of current receiver
+Note: transitioning states will terminate execution of current action
 
 ## Stack
 push constant - push constant onto stack
@@ -35,4 +35,4 @@ copy - duplicate top of stack and push it onto stack
 swap - pop two, push in reverse order
 
 ## Message
-send - pop one, send via outbound connections
+send - send top of stack via outbound links

@@ -1,8 +1,7 @@
 neuron 0 {
     state 0 {
-        receive {
+        action {
             or
-            copy
             send
         }
     }

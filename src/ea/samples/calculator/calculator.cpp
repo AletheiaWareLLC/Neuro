@@ -5,9 +5,8 @@
 int main() {
   std::random_device rseed;
   std::mt19937 rng(rseed());
-  std::uniform_int_distribution<int> dist(
-      std::numeric_limits<int>::min() / 1000,
-      std::numeric_limits<int>::max() / 1000);
+  std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),
+                                          std::numeric_limits<int>::max());
 
   for (int i = 0; i < 100; i++) {
     auto a = dist(rng);
@@ -42,6 +41,8 @@ int main() {
       c = a % b;
       break;
     }
-    std::cout << '>' << a << op << b << '\n' << '<' << c << '\n' << '\n';
+    std::cout << '>' << a << ' ' << b << ' ' << op << '\n'
+              << '<' << c << '\n'
+              << '\n';
   }
 }

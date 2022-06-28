@@ -1,3 +1,4 @@
+#include <fstream>
 #include <iostream>
 #include <iterator>
 #include <set>
@@ -9,22 +10,13 @@
 #include <Neuro/network.h>
 #include <Neuro/random.h>
 
-std::string Network::id() const {
-  std::hash<std::string> hasher;
-  std::stringstream ss;
-  size_t hash = 0;
-  if (emit(ss)) {
-    hash = hasher(ss.str());
+bool Network::load(std::istream &in) {
+  Lexer lexer;
+  if (!lexer.tokenize(in)) {
+    return false;
   }
-  return std::to_string(hash);
-}
-
-bool Network::load(std::string name) {
-  std::ifstream in(name);
-  Lexer lexer(in);
   Parser parser(lexer);
   const auto result = parser.parseNetwork(*this);
-  in.close();
   if (!result) {
     std::cerr << "Network Error: Load Failed" << std::endl;
     return false;
@@ -32,261 +24,374 @@ bool Network::load(std::string name) {
   return true;
 }
 
-bool Network::generate(uint neurons, uint connections, uint states,
-                       uint receivers, uint instructions) {
+bool Network::load(const std::string name) {
+  std::ifstream in(name);
+  const auto result = load(in);
+  in.close();
+  if (!result) {
+    return false;
+  }
+  return true;
+}
 
+bool Network::generate(Random &rng, const uint neurons, const uint states,
+                       const uint actions, const uint instructions,
+                       const uint links) {
   for (int nid = 0; nid < neurons; nid++) {
-    if (!generateNeuron(nid, states, receivers, instructions)) {
+    if (!generateNeuron(rng, nid, states, actions, instructions)) {
       return false;
     }
   }
-  for (int cid = 0; cid < connections; cid++) {
-    if (!generateConnection()) {
+  for (int lid = 0; lid < links; lid++) {
+    if (!generateLink(rng)) {
       return false;
     }
   }
   return true;
 }
 
-bool Network::generateConnection() {
+bool Network::generateNeuron(Random &rng, const uint id, const uint states,
+                             const uint actions, const uint instructions) {
+  auto n = std::make_unique<Neuron>(id);
+
+  if (!n->generate(rng, states, actions, instructions)) {
+    std::cerr << "Network Error: Neuron Generation Failed" << std::endl;
+    return false;
+  }
+
+  // Add neuron to end
+  if (id == neurons.size()) {
+    neurons.push_back(std::move(n));
+    return true;
+  }
+
+  // Insert neuron at index
+
+  // Update all following neuron's ids
+  for (auto i = id; i < neurons.size(); i++) {
+    neurons[i]->id++;
+  }
+
+  // Update links
+  std::map<uint, std::set<uint>> ls;
+  for (auto l : links) {
+    auto k = l.first;
+    if (k == id) {
+      continue;
+    }
+    if (k > id) {
+      k++;
+    }
+    for (auto d : l.second) {
+      if (d == id) {
+        continue;
+      }
+      if (d > id) {
+        d++;
+      }
+      ls[k].insert(d);
+    }
+  }
+  links.clear();
+  links.insert(ls.cbegin(), ls.cend());
+
+  auto itr = neurons.begin();
+  std::advance(itr, id);
+  neurons.insert(itr, std::move(n));
+  return true;
+}
+
+bool Network::generateLink(Random &rng) {
   const auto ns = neurons.size();
   if (ns <= 0) {
     std::cerr << "Network Error: Network has no Neurons" << std::endl;
     return false;
   }
-  const auto source = udist(rng) % ns;
-  const auto destination = udist(rng) % ns;
-  this->connections[source].insert(destination);
+  const auto source = rng.nextUnsignedInt() % ns;
+  const auto destination = rng.nextUnsignedInt() % ns;
+  links[source].insert(destination);
   return true;
 }
 
-bool Network::generateNeuron(uint id, uint states, uint receivers,
-                             uint instructions) {
-  Neuron n(id);
+bool Network::mate(Random &rng, const Network &a, const Network &b) {
+  const auto as = a.neurons.size();
+  const auto bs = b.neurons.size();
+  uint nid = 0;
+  // Mate neurons shared by parents
+  for (; nid < as && nid < bs; nid++) {
+    const Neuron &na = *a.neurons[nid].get();
+    const Neuron &nb = *b.neurons[nid].get();
+    auto nc = std::make_unique<Neuron>(nid);
+    if (nc->mate(rng, na, nb)) {
+      neurons.push_back(std::move(nc));
+    } else {
+      return false;
+    }
+  }
+  // Copy extra neurons from a
+  for (; nid < as; nid++) {
+    const Neuron &na = *a.neurons[nid].get();
+    auto nc = std::make_unique<Neuron>();
+    if (nc->duplicate(na)) {
+      neurons.push_back(std::move(nc));
+    } else {
+      return false;
+    }
+  }
+  // Copy extra neurons from b
+  for (; nid < bs; nid++) {
+    const Neuron &nb = *b.neurons[nid].get();
+    auto nc = std::make_unique<Neuron>();
+    if (nc->duplicate(nb)) {
+      neurons.push_back(std::move(nc));
+    } else {
+      return false;
+    }
+  }
 
-  if (!n.generate(states, receivers, instructions)) {
+  const auto limit = std::max(a.links.size(), b.links.size());
+  if (limit == 0) {
+    return false;
+  }
+  const auto split = rng.nextUnsignedInt() % limit;
+  uint lid = 0;
+  // Link 0 until split are taken from A
+  for (; lid < split && lid < a.links.size(); lid++) {
+    auto itr = a.links.cbegin();
+    std::advance(itr, lid);
+    if (itr != a.links.cend()) {
+      links[lid].insert(itr->second.begin(), itr->second.end());
+    }
+  }
+  // The rest of the Links are taken from B
+  for (; lid < b.links.size(); lid++) {
+    auto itr = b.links.cbegin();
+    std::advance(itr, lid);
+    if (itr != b.links.cend()) {
+      links[lid].insert(itr->second.begin(), itr->second.end());
+    }
+  }
+  // If A has more Links than B, top up child from A
+  for (; lid < a.links.size(); lid++) {
+    auto itr = a.links.cbegin();
+    std::advance(itr, lid);
+    if (itr != a.links.cend()) {
+      links[lid].insert(itr->second.begin(), itr->second.end());
+    }
+  }
+  return true;
+}
+
+bool Network::mutate(Random &rng, const uint states, const uint actions,
+                     const uint instructions) {
+  // Default case is twice as likely
+  switch (rng.nextUnsignedInt() % 10) {
+  case 0: {
+    // Add Neuron
+    return addNeuron(rng, states, actions, instructions);
+  }
+  case 1: {
+    // Remove Neuron
+    const auto ns = neurons.size();
+    if (ns <= 1) {
+      std::cerr << "Network Error: Network only has one Neuron" << std::endl;
+      return false;
+    }
+    const auto nid = rng.nextUnsignedInt() % ns;
+    return removeNeuron(nid);
+  }
+  case 2: {
+    // Add State
+    const auto ns = neurons.size();
+    if (ns <= 0) {
+      std::cerr << "Network Error: Network has no Neurons" << std::endl;
+      return false;
+    }
+    auto &n = neurons[rng.nextUnsignedInt() % ns];
+    return n->addState(rng, actions, instructions);
+  }
+  case 3: {
+    // Remove State
+    const auto ns = neurons.size();
+    if (ns <= 0) {
+      std::cerr << "Network Error: Network has no Neurons" << std::endl;
+      return false;
+    }
+    auto &n = neurons[rng.nextUnsignedInt() % ns];
+    const auto ss = n->states.size();
+    if (ss <= 0) {
+      std::cerr << "Network Error: Neuron has no States" << std::endl;
+      return false;
+    }
+    const auto sid = rng.nextUnsignedInt() % ss;
+    return n->removeState(sid);
+  }
+  case 4: {
+    // Add Action
+    const auto ns = neurons.size();
+    if (ns <= 0) {
+      std::cerr << "Network Error: Network has no Neurons" << std::endl;
+      return false;
+    }
+    auto &n = neurons[rng.nextUnsignedInt() % ns];
+    const auto ss = n->states.size();
+    if (ss <= 0) {
+      std::cerr << "Network Error: Neuron has no States" << std::endl;
+      return false;
+    }
+    auto &s = n->states[rng.nextUnsignedInt() % ss];
+    return s->addAction(rng, ss, instructions);
+  }
+  case 5: {
+    // Remove Action
+    const auto ns = neurons.size();
+    if (ns <= 0) {
+      std::cerr << "Network Error: Network has no Neurons" << std::endl;
+      return false;
+    }
+    const auto &n = neurons[rng.nextUnsignedInt() % ns];
+    const auto ss = n->states.size();
+    if (ss <= 0) {
+      std::cerr << "Network Error: Neuron has no States" << std::endl;
+      return false;
+    }
+    auto &s = n->states[rng.nextUnsignedInt() % ss];
+    return s->removeAction(rng.nextSignedInt());
+  }
+  case 6: {
+    // Add Link
+    return generateLink(rng);
+  }
+  case 7: {
+    // Remove Link
+    return removeLink(rng.nextUnsignedInt(), rng.nextUnsignedInt());
+  }
+  default: {
+    // Mutate Action
+    const auto ns = neurons.size();
+    if (ns <= 0) {
+      std::cerr << "Network Error: Network has no Neurons" << std::endl;
+      return false;
+    }
+    auto &n = neurons[rng.nextUnsignedInt() % ns];
+    const auto ss = n->states.size();
+    if (ss <= 0) {
+      std::cerr << "Network Error: Neuron has no States" << std::endl;
+      return false;
+    }
+    auto &s = n->states[rng.nextUnsignedInt() % ss];
+    const auto r = rng.nextSignedInt();
+    if (r < 0 && s->wildcard) {
+      if (!s->wildcard.value()->mutate(rng, ss)) {
+        return false;
+      }
+    } else {
+      const auto as = s->actions.size();
+      if (as <= 0) {
+        std::cerr << "Network Error: State has no Actions" << std::endl;
+        return false;
+      }
+      auto itr = s->actions.begin();
+      std::advance(itr, r % as);
+      auto &a = itr->second;
+      if (!a->mutate(rng, ss)) {
+        return false;
+      }
+    }
+    break;
+  }
+  }
+  return true;
+}
+
+bool Network::addNeuron(Random &rng, const uint states, const uint actions,
+                        const uint instructions) {
+  const auto nid = rng.nextUnsignedInt() % (neurons.size() + 1);
+
+  if (!generateNeuron(rng, nid, states, actions, instructions)) {
     std::cerr << "Network Error: Neuron Generation Failed" << std::endl;
     return false;
   }
 
-  this->neurons.push_back(n);
+  // Link To
+  links[rng.nextUnsignedInt() % neurons.size()].insert(nid);
+  // Link From
+  links[nid].insert(rng.nextUnsignedInt() % neurons.size());
+
   return true;
 }
 
-bool Network::mate(const Network &a, const Network &b) {
-  std::uniform_int_distribution<uint> ndist(
-      0, std::max(a.neurons.size(), b.neurons.size()));
-  std::uniform_int_distribution<uint> cdist(
-      0, std::max(a.connections.size(), b.connections.size()));
-
-  auto split = ndist(rng);
-
-  uint nid = 0;
-  for (; nid < split && nid < a.neurons.size(); nid++) {
-    neurons.push_back(a.neurons[nid]);
-  }
-  for (; nid < b.neurons.size(); nid++) {
-    neurons.push_back(b.neurons[nid]);
+bool Network::removeNeuron(const uint id) {
+  // Update all following neuron's ids
+  for (auto i = id; i < neurons.size(); i++) {
+    neurons[i]->id--;
   }
 
-  split = cdist(rng);
-  uint cid = 0;
-  for (; cid < split && cid < a.connections.size(); cid++) {
-    const auto cs = a.connections.find(cid);
-    if (cs != a.connections.end()) {
-      connections[cid].insert(cs->second.begin(), cs->second.end());
+  // Update links
+  std::map<uint, std::set<uint>> cs;
+  for (auto c : links) {
+    auto k = c.first;
+    if (k == id) {
+      continue;
+    }
+    if (k > id) {
+      k--;
+    }
+    for (auto d : c.second) {
+      if (d == id) {
+        continue;
+      }
+      if (d > id) {
+        d--;
+      }
+      cs[k].insert(d);
     }
   }
-  for (; cid < b.connections.size(); cid++) {
-    const auto cs = b.connections.find(cid);
-    if (cs != b.connections.end()) {
-      connections[cid].insert(cs->second.begin(), cs->second.end());
-    }
-  }
+  links.clear();
+  links.insert(cs.cbegin(), cs.cend());
+
+  // Erase neuron
+  auto nitr = neurons.begin();
+  std::advance(nitr, id);
+  neurons.erase(nitr);
   return true;
 }
 
-bool Network::mutate() {
-  // Default case is most likely mutation
-  // Adding is twice as likely as removing
-  switch (udist(rng) % 20) {
-  case 0:
-  case 1: {
-    // Add Connection
-    std::cout << "Mutation: Add Connection" << std::endl;
-    if (!generateConnection()) {
-      return false;
-    }
-    break;
+bool Network::removeLink(const uint sOffset, const uint dOffset) {
+  const auto ls = links.size();
+  if (ls <= 0) {
+    std::cerr << "Network Error: Network has no Links" << std::endl;
+    return false;
   }
-  case 2: {
-    // Remove Connection
-    std::cout << "Mutation: Remove Connection" << std::endl;
-    const auto cs = connections.size();
-    if (cs <= 0) {
-      std::cerr << "Network Error: Network has no Connections" << std::endl;
-      return false;
-    }
-    const auto source = udist(rng) % cs;
-    std::set<uint> &set = connections[source];
-    const auto ss = set.size();
-    if (ss <= 0) {
-      std::cerr << "Network Error: Neuron " << source << " has no Connections"
-                << std::endl;
-      return false;
-    }
-    auto itr = set.begin();
-    std::advance(itr, udist(rng) % ss);
-    set.erase(itr);
-    break;
+  auto itr = links.begin();
+  std::advance(itr, sOffset % ls);
+  const auto source = itr->first;
+  std::set<uint> &set = itr->second;
+  const auto ss = set.size();
+  if (ss <= 0) {
+    std::cerr << "Network Error: Neuron " << source << " has no Links"
+              << std::endl;
+    return false;
   }
-  case 3:
-  case 4: {
-    // Add Neuron
-    std::cout << "Mutation: Add Neuron" << std::endl;
-    if (!generateNeuron(neurons.size())) {
-      return false;
-    }
-    break;
-  }
-  case 5: {
-    // Delete Neuron
-    std::cout << "Mutation: Remove Neuron" << std::endl;
-    // TODO need to update all following neuron's ids and connections
-    break;
-  }
-  case 6:
-  case 7: {
-    // Add State
-    std::cout << "Mutation: Add State" << std::endl;
-    const auto ns = neurons.size();
-    if (ns <= 0) {
-      std::cerr << "Network Error: Network has no Neurons" << std::endl;
-      return false;
-    }
-    auto n = neurons[udist(rng) % ns];
-    const auto ss = n.states.size();
-    State s(ss);
-
-    if (!s.generate(ss + 1)) {
-      std::cerr << "Network Error: State Generation Failed" << std::endl;
-      return false;
-    }
-
-    n.states.push_back(s);
-    break;
-  }
-  case 8: {
-    // Remove State
-    std::cout << "Mutation: Remove State" << std::endl;
-    // TODO need to update all following state's ids and gotos
-    break;
-  }
-  case 9:
-  case 10: {
-    // Add Action
-    std::cout << "Mutation: Add Action" << std::endl;
-    const auto ns = neurons.size();
-    if (ns <= 0) {
-      std::cerr << "Network Error: Network has no Neurons" << std::endl;
-      return false;
-    }
-    auto n = neurons[udist(rng) % ns];
-    const auto ss = n.states.size();
-    if (ss <= 0) {
-      std::cerr << "Network Error: Neuron has no States" << std::endl;
-      return false;
-    }
-    auto s = n.states[udist(rng) % ss];
-    Action a;
-
-    if (!a.generate(ss)) {
-      std::cerr << "Network Error: Action Generation Failed" << std::endl;
-      return false;
-    }
-
-    s.actions[(sbyte)udist(rng)] = a;
-    break;
-  }
-  case 11: {
-    // Remove Action
-    std::cout << "Mutation: Remove Action" << std::endl;
-
-    const auto ns = neurons.size();
-    if (ns <= 0) {
-      std::cerr << "Network Error: Network has no Neurons" << std::endl;
-      return false;
-    }
-    auto n = neurons[udist(rng) % ns];
-    const auto ss = n.states.size();
-    if (ss <= 0) {
-      std::cerr << "Network Error: Neuron has no States" << std::endl;
-      return false;
-    }
-    auto s = n.states[udist(rng) % ss];
-    auto r = udist(rng);
-    if (r == 0) {
-      s.wildcard.reset();
-    } else {
-      const auto as = s.actions.size();
-      if (as <= 0) {
-        std::cerr << "Network Error: State has no Actions" << std::endl;
-        return false;
-      }
-      auto itr = s.actions.begin();
-      std::advance(itr, r % as);
-      s.actions.erase(itr);
-    }
-    break;
-  }
-  default: {
-    // Mutate Action
-    std::cout << "Mutation: Mutate Action" << std::endl;
-    const auto ns = neurons.size();
-    if (ns <= 0) {
-      std::cerr << "Network Error: Network has no Neurons" << std::endl;
-      return false;
-    }
-    auto n = neurons[udist(rng) % ns];
-    const auto ss = n.states.size();
-    if (ss <= 0) {
-      std::cerr << "Network Error: Neuron has no States" << std::endl;
-      return false;
-    }
-    auto s = n.states[udist(rng) % ss];
-    auto r = udist(rng);
-    if (r == 0) {
-      if (!s.wildcard->mutate(ss)) {
-        return false;
-      }
-    } else {
-      const auto as = s.actions.size();
-      if (as <= 0) {
-        std::cerr << "Network Error: State has no Actions" << std::endl;
-        return false;
-      }
-      auto itr = s.actions.begin();
-      std::advance(itr, r % as);
-      if (!itr->second.mutate(ss)) {
-        return false;
-      }
-    }
-    break;
-  }
+  auto sitr = set.begin();
+  std::advance(sitr, dOffset % ss);
+  set.erase(sitr);
+  if (set.size() == 0) {
+    links.erase(itr);
   }
   return true;
 }
 
 void Network::reset() {
-  for (Neuron &n : neurons) {
+  for (const auto &n : neurons) {
     // Revert to initial state
-    n.state = 0;
+    n->state = 0;
     // Empty stack
-    while (!n.stack.empty()) {
-      n.stack.pop();
+    while (!n->stack.empty()) {
+      n->stack.pop();
     }
     // Push stack initial value
-    n.stack.push(0);
+    n->stack.push(0);
   }
   // Empty activation queue
   while (!queue.empty()) {

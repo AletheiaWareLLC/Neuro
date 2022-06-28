@@ -7,117 +7,159 @@
 #include <Neuro/random.h>
 #include <Neuro/vm/vm.h>
 
-bool EA::evolve() {
-  const auto path = std::filesystem::path{directory};
-  if (!std::filesystem::is_directory(path) || !std::filesystem::exists(path)) {
-    if (!std::filesystem::create_directory(path)) {
-      std::cerr << "EA Error: Population Directory Creation Failed"
-                << std::endl;
-      return false;
-    }
-  }
-
-  const VM vm(maxCycles);
-
-  std::map<std::string, Network> population;
-
-  std::string best;
-  std::string worst;
-
+bool EA::load(const std::string directory) {
   // Read Population From Directory
+  const auto path = std::filesystem::path{directory};
   for (const auto &entry : std::filesystem::directory_iterator(path)) {
     const auto path = entry.path();
-    const auto name = path.filename().string();
     if (entry.is_regular_file()) {
-      Network nn;
-      if (!nn.load(path)) {
-        std::cerr << "EA Error: Network Load Failed" << std::endl;
+      auto network = std::make_unique<Network>();
+      if (!network->load(path)) {
+        std::cerr << "EA Error: Network Load Failed: " << path << std::endl;
         return false;
       }
-      population[name] = nn;
-      std::cout << "Loaded: " << name << std::endl;
+      if (network->neurons.empty()) {
+        std::cerr << "EA Error: Loaded Network has no Neurons: " << path
+                  << std::endl;
+        return false;
+      }
+      std::stringstream ss;
+      if (network->emit(ss)) {
+        const auto s = ss.str();
+        const std::hash<std::string> hasher;
+        const auto hash = hasher(s);
+        const auto id = std::to_string(hash) + ".neu";
+        if (population.find(id) == population.cend()) {
+          population[id] = std::move(network);
+          sizes[id] = s.size();
+          std::cout << "Loaded: " << id << std::endl;
+        } else {
+          std::cout << "Duplicate: " << id << std::endl;
+        }
+      } else {
+        std::cout << "Defect: " << path << std::endl;
+      }
+    }
+  }
+  return true;
+}
+
+bool EA::repopulate(Random &rng, const uint limit, uint &randoms,
+                    uint &duplicates, uint &defects) {
+  while (population.size() < limit) {
+    const auto ns = rng.nextUnsignedInt() % neurons + 1;
+    const auto ss = rng.nextUnsignedInt() % states + 1;
+    const auto rs = rng.nextUnsignedInt() % actions + 1;
+    const auto is = rng.nextUnsignedInt() % instructions + 1;
+    const auto ls = rng.nextUnsignedInt() % links + 1;
+    auto network = std::make_unique<Network>();
+    if (network->generate(rng, ns, ss, rs, is, ls)) {
+      if (network->neurons.empty()) {
+        std::cerr << "EA Error: Random Network has no Neurons: " << ns << " "
+                  << ss << " " << rs << " " << is << " " << ls << " "
+                  << std::endl;
+        return false;
+      }
+      std::stringstream ss;
+      if (network->emit(ss)) {
+        const auto s = ss.str();
+        const std::hash<std::string> hasher;
+        const auto hash = hasher(s);
+        const auto id = std::to_string(hash) + ".neu";
+        if (population.find(id) == population.cend()) {
+          population[id] = std::move(network);
+          sizes[id] = s.size();
+          // std::cout << "Random: " << id << std::endl;
+          randoms++;
+        } else {
+          duplicates++;
+        }
+      } else {
+        defects++;
+      }
+    } else {
+      defects++;
+    }
+  }
+  return true;
+}
+
+bool EA::evaluate(Random &rng, std::string &best, std::string &worst, uint &min,
+                  uint &max, float &average) {
+  // Virtual Machine
+  const VM vm(cycles);
+  // Fitness Function
+  Fitness ff(fitness);
+
+  errors.clear();
+  failed.clear();
+
+  for (const auto &[name, network] : population) {
+    // Start at character count to incentivize space efficiency
+    errors[name] = sizes[name] / 100;
+  }
+
+  // Read question/answer from fitness function
+  std::string question, answer;
+  while (ff.next(question, answer)) {
+    // std::cout << "Question: " << question << std::endl;
+
+    std::vector<sbyte> input(question.size(), 0);
+    for (int i = 0; i < question.size(); i++) {
+      input[i] = question[i];
+    }
+
+    for (const auto &[name, network] : population) {
+      // std::cout << "Evaluating: " << name << std::endl;
+      if (failed.find(name) != failed.end()) {
+        // Skip
+        continue;
+      }
+      std::vector<sbyte> output;
+      uint c = 0;
+      if (vm.execute(*network.get(), input, output, c)) {
+        // std::cout << "Answer: " << output.size() << " : ";
+        // for (auto c : output) {
+        // std::cout << c;
+        //}
+        // std::cout << std::endl;
+
+        // Compare answer to fitness function
+        // Start at cycle count to incentivize time efficiency
+        auto error = c / 10;
+        int i = 0;
+        for (; i < output.size() && i < answer.size(); i++) {
+          error += abs(output[i] - question[i]);
+        }
+        for (; i < answer.size(); i++) {
+          // Incomplete answer is penalized
+          error += abs(answer[i]);
+        }
+        for (; i < output.size(); i++) {
+          // Extra output is penalized
+          error += abs(output[i]);
+        }
+        if (error > std::numeric_limits<uint>::max() - errors[name]) {
+          // Avoid overflow
+          errors[name] = std::numeric_limits<uint>::max();
+        } else {
+          errors[name] += error;
+        }
+      } else {
+        failed.insert(name);
+        errors.erase(name);
+      }
     }
   }
 
-  for (int g = 0; g < maxGenerations; g++) {
-    std::cout << "Generation: " << g << std::endl;
+  for (const auto &[k, v] : errors) {
+    // std::cout << k << ": " << v << std::endl;
+  }
 
-    //  While population size < population limit, generate random network
-    uint randoms = 0;
-    while (population.size() < maxIndividuals) {
-      Network nn;
-      if (!nn.generate(maxNeurons, maxConnections)) {
-        std::cerr << "EA Error: Network Generation Failed" << std::endl;
-        return false;
-      }
-      const auto id = nn.id() + ".neu";
-      population[id] = nn;
-      // std::cout << "Random: " << id << std::endl;
-      randoms++;
-    }
-    std::cout << "Randoms: " << randoms << std::endl;
+  uint sum = 0;
 
-    // Create fitness function
-    Fitness ff(fitness);
-    std::map<std::string, uint> errors;
-
-    std::set<std::string> failed;
-
-    // Read question/answer from fitness function
-    std::string question, answer;
-    while (ff.next(question, answer)) {
-      // std::cout << "Question: " << question << std::endl;
-
-      std::vector<sbyte> input(question.size(), 0);
-      for (int i = 0; i < question.size(); i++) {
-        input[i] = question[i];
-      }
-
-      for (auto [name, network] : population) {
-        if (failed.find(name) != failed.end()) {
-          // Skip
-          continue;
-        }
-        std::vector<sbyte> output;
-        if (vm.execute(network, input, output)) {
-          // std::cout << "Answer: ";
-          // for (auto c : output) {
-          // std::cout << c;
-          //}
-          // std::cout << std::endl;
-
-          // Compare answer to fitness function
-          auto error = 0;
-          int i = 0;
-          for (; i < output.size(); i++) {
-            if (i < answer.size()) {
-              error += abs(output[i] - question[i]);
-            } else {
-              // Extra output is penalized
-              error += output[i];
-            }
-          }
-          if (errors.find(name) == errors.end()) {
-            errors[name] = error;
-          } else {
-            errors[name] += error;
-          }
-        } else {
-          failed.insert(name);
-        }
-      }
-    }
-
-    for (const auto [k, v] : errors) {
-      std::cout << k << ": " << v << std::endl;
-    }
-
-    uint min = std::numeric_limits<uint>::max();
-    uint max = std::numeric_limits<uint>::min();
-    uint sum = 0;
-    float average = 0;
-
-    for (const auto [name, error] : errors) {
+  if (const auto count = errors.size(); count > 0) {
+    for (const auto &[name, error] : errors) {
       if (error < min) {
         min = error;
         best = name;
@@ -128,97 +170,167 @@ bool EA::evolve() {
       }
       sum += error;
     }
+    average = (float)sum / (float)count;
+  }
 
-    if (const auto count = errors.size(); count > 0) {
-      std::cout << "Worst: " << max << std::endl;
-      average = (float)sum / (float)count;
-      std::cout << "Average: " << average << std::endl;
-      std::cout << "Best: " << min << std::endl;
-    }
+  if (!worst.empty()) {
+    // Kill worst
+    failed.insert(worst);
+    errors.erase(worst);
+  }
+  return true;
+}
 
-    std::vector<std::string> parents;
+bool EA::kill(const std::set<std::string> &victims, uint &deaths) {
+  for (const auto &name : victims) {
+    population.erase(name);
+    sizes.erase(name);
+    errors.erase(name);
+    deaths++;
+    // std::cout << "Death: " << name << std::endl;
+  }
+  return true;
+}
 
-    for (const auto [name, nn] : population) {
-      if (errors.find(name) == errors.end()) {
-        failed.insert(name);
-      } else {
-        parents.push_back(name);
+bool EA::kill(const std::string directory, const std::set<std::string> &victims,
+              uint &deaths) {
+  const auto path = std::filesystem::path{directory};
+  for (const auto &name : victims) {
+    // Delete from directory
+    const auto file = path / name;
+    if (std::filesystem::exists(file)) {
+      if (!std::filesystem::remove(file)) {
+        std::cerr << "EA Error: File Deletion Failed: " << file << std::endl;
+        return false;
       }
     }
+  }
+  return kill(victims, deaths);
+}
 
-    for (const auto name : failed) {
-      population.erase(name);
-      errors.erase(name);
-      /* TODO delete from directory
-      const auto file = path / name;
-      if (std::filesystem::exists(file)) {
-        if (!std::filesystem::remove(file)) {
-          std::cerr << "EA Error: Network File Deletion Failed" << std::endl;
-          return false;
-        }
-      }
-      */
-      // std::cout << "Killed: " << name << std::endl;
+bool EA::reproduce(Random &rng, const uint limit,
+                   std::set<std::string> &parents, uint &births,
+                   uint &duplicates, uint &defects) {
+  if (population.size() >= limit) {
+    // Nothing to do
+    return true;
+  }
+
+  // Get eligible parents
+  std::vector<std::string> ps;
+  ps.reserve(errors.size());
+  for (const auto &[name, error] : errors) {
+    ps.push_back(name);
+  }
+
+  if (ps.size() < 2) {
+    // Need at least two parents to reproduce
+    return true;
+  }
+
+  const auto children = limit - population.size();
+
+  for (auto c = 0; c < children; c++) {
+    // Mate Best For Next Generation
+    std::string a = ps[rng.nextUnsignedInt() % ps.size()];
+    std::string b = ps[rng.nextUnsignedInt() % ps.size()];
+    if (a == b) {
+      continue;
     }
-    std::cout << "Deaths: " << failed.size() << std::endl;
-
-    if (g + 1 < maxGenerations) {
-      // std::cout << "Reproducing" << std::endl;
-      // Mate Best For Next Generation
-      uint births = 0;
-      if (const auto count = parents.size(); count > 0) {
-        while (population.size() < maxIndividuals) {
-          std::string a = parents[udist(rng) % count];
-          std::string b = parents[udist(rng) % count];
-          if (a == b) {
-            break;
-          }
-          const Network &na = population[a];
-          const Network &nb = population[b];
-          Network nc;
-          if (!nc.mate(na, nb)) {
-            std::cerr << "EA Error: Network Reproduction Failed" << std::endl;
-            return false;
-          }
-          const auto id = nc.id() + ".neu";
-          population[id] = nc;
+    parents.insert(a);
+    parents.insert(b);
+    const Network &na = *population[a].get();
+    const Network &nb = *population[b].get();
+    auto nc = std::make_unique<Network>();
+    if (nc->mate(rng, na, nb)) {
+      if (nc->neurons.empty()) {
+        std::cerr << "EA Error: Child Network has no Neurons: " << a << " " << b
+                  << std::endl;
+        return false;
+      }
+      std::stringstream ss;
+      if (nc->emit(ss)) {
+        const auto s = ss.str();
+        const std::hash<std::string> hasher;
+        const auto hash = hasher(s);
+        const auto id = std::to_string(hash) + ".neu";
+        if (population.find(id) == population.cend()) {
+          population[id] = std::move(nc);
+          sizes[id] = s.size();
           // std::cout << "Child: " << a << " + " << b << " = " << id <<
           // std::endl;
           births++;
+        } else {
+          duplicates++;
         }
+      } else {
+        defects++;
       }
-      std::cout << "Births: " << births << std::endl;
-
-      if (!worst.empty() && best != worst) {
-        // Randomly Mutate Worst Scorer
-        auto nn = population[worst];
-        std::cout << "Mutating: " << worst << std::endl;
-        if (nn.mutate()) {
-          // Network ID has Changed
-          population.erase(worst);
-          errors.erase(worst);
-          const auto id = nn.id() + ".neu";
-          population[id] = nn;
-        }
-      }
+    } else {
+      defects++;
     }
   }
+  return true;
+}
 
-  if (best.size() > 0) {
-    // Save Best Scorer
-    std::cout << "Best: " << best << std::endl;
-    const auto nn = population[best];
-    std::ofstream destination;
-    destination.open(path / best);
-    auto result = nn.emit(destination);
-    destination.close();
-    if (!result) {
-      std::cerr << "EA Error: Network Emission Failed" << std::endl;
+bool EA::mutate(Random &rng, uint &mutations, uint &duplicates, uint &defects) {
+  if (population.size() == 0) {
+    // Nothing to mutate
+    return true;
+  }
+  auto itr = population.begin();
+  // Randomly Mutate an Individual
+  std::advance(itr, rng.nextUnsignedInt() % population.size());
+  const std::string mutant = itr->first;
+  // std::cout << "Mutating: " << mutant << std::endl;
+  auto &network = itr->second;
+  if (network->mutate(rng, states, actions, instructions)) {
+    if (network->neurons.empty()) {
+      std::cerr << "EA Error: Mutated Network has no Neurons" << std::endl;
       return false;
     }
+    // Network ID has Changed
+    std::stringstream ss;
+    if (network->emit(ss)) {
+      const auto s = ss.str();
+      const std::hash<std::string> hasher;
+      const auto hash = hasher(s);
+      const auto id = std::to_string(hash) + ".neu";
+      if (population.find(id) == population.cend()) {
+        population[id] = std::move(network);
+        sizes[id] = s.size();
+        population.erase(mutant);
+        sizes.erase(mutant);
+        errors.erase(mutant);
+        mutations++;
+      } else {
+        duplicates++;
+      }
+    } else {
+      defects++;
+    }
   } else {
-    std::cout << "Solution Not Found" << std::endl;
+    defects++;
   }
+  return true;
+}
 
+bool EA::save(const std::string directory, const std::string name,
+              const std::unique_ptr<Network> &network) {
+  const auto path = std::filesystem::path{directory};
+  if (!std::filesystem::is_directory(path) || !std::filesystem::exists(path)) {
+    if (!std::filesystem::create_directory(path)) {
+      std::cerr << "EA Error: Directory Creation Failed" << std::endl;
+      return false;
+    }
+  }
+  std::ofstream destination;
+  destination.open(path / name);
+  auto result = network->emit(destination);
+  destination.close();
+  if (!result) {
+    std::cerr << "EA Error: Network Emission Failed" << std::endl;
+    return false;
+  }
   return true;
 }

@@ -2,6 +2,7 @@
 #define NETWORK_H
 
 #include <cstddef>
+#include <istream>
 #include <map>
 #include <ostream>
 #include <queue>
@@ -12,45 +13,39 @@
 
 #include <Neuro/data.h>
 #include <Neuro/neuron.h>
+#include <Neuro/random.h>
 
 class Network {
 public:
-  std::vector<Neuron> neurons;
-  std::map<uint, std::set<uint>> connections;
+  std::vector<std::unique_ptr<Neuron>> neurons;
+  std::map<uint, std::set<uint>> links;
   std::queue<std::pair<uint, sbyte>> queue;
 
   Network() {}
-  Network(const Network &n)
-      : neurons(n.neurons), connections(n.connections), queue(n.queue) {}
-  Network(Network &&n)
-      : neurons(n.neurons), connections(n.connections), queue(n.queue) {}
+  Network(const Network &n) = delete;
+  Network(Network &&n) = delete;
   ~Network() {}
-  Network &operator=(const Network &n) {
-    neurons = n.neurons;
-    connections = n.connections;
-    queue = n.queue;
-    return *this;
-  }
-  Network &operator=(Network &&n) {
-    neurons = n.neurons;
-    connections = n.connections;
-    queue = n.queue;
-    return *this;
-  }
 
-  std::string id() const;
+  bool load(std::istream &in);
+  bool load(const std::string name);
 
-  bool load(std::string name);
+  bool generate(Random &rng, const uint neurons, const uint states,
+                const uint actions, const uint instructions, const uint links);
+  bool generateNeuron(Random &rng, const uint id, const uint states,
+                      const uint actions, const uint instructions);
+  bool generateLink(Random &rng);
 
-  bool generate(uint neurons = 3, uint connections = 5, uint states = 3,
-                uint receivers = 3, uint instructions = 3);
-  bool generateNeuron(uint id, uint states = 3, uint receivers = 3,
-                      uint instructions = 3);
-  bool generateConnection();
+  bool mate(Random &rng, const Network &a, const Network &b);
 
-  bool mate(const Network &a, const Network &b);
+  bool mutate(Random &rng, const uint states, const uint actions,
+              const uint instructions);
 
-  bool mutate();
+  bool addNeuron(Random &rng, const uint states, const uint actions,
+                 const uint instructions);
+
+  bool removeNeuron(const uint id);
+
+  bool removeLink(const uint sOffset, const uint dOffset);
 
   void reset();
 

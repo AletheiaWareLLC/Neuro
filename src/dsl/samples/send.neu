@@ -1,7 +1,6 @@
 neuron 0 {
     state 0 {
         action {
-            rls
             send
         }
     }
