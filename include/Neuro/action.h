@@ -2,6 +2,7 @@
 #define ACTION_H
 
 #include <map>
+#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>
