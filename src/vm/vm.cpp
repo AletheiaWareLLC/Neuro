@@ -9,7 +9,7 @@ bool VM::execute(Network &nn, Neuron &n, State &s, Action &a, uint &c) const {
   // Execute Action Instructions
   for (a.pc = 0; a.pc >= 0 && a.pc < a.instructions.size();) {
     // Check and Increment Cycle Counter
-    if (c++ > cycles) {
+    if (++c > cycles) {
       std::cerr << "VM Error: Cycle Limit Exceeded" << std::endl;
       return false;
     }

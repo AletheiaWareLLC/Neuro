@@ -4,8 +4,10 @@
 #include <sstream>
 #include <vector>
 
+#include <Neuro/alphabet.h>
 #include <Neuro/data.h>
 #include <Neuro/ea/ea.h>
+#include <Neuro/ea/fitness.h>
 #include <Neuro/network.h>
 #include <Neuro/random.h>
 #include <Neuro/vm/vm.h>
@@ -74,8 +76,10 @@ bool generate(std::vector<std::string> options, std::string parameter) {
   }
 
   RealRandom rng;
+  std::set<sbyte> alphabet{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
   Network nn;
-  if (!nn.generate(rng, neurons, states, actions, instructions, links)) {
+  if (!nn.generate(rng, alphabet, neurons, states, actions, instructions,
+                   links)) {
     return -1;
   }
 
@@ -128,23 +132,34 @@ bool run(std::vector<std::string> options, std::string parameter) {
     std::vector<sbyte> input;
     std::vector<sbyte> output;
 
-    int i = 0;
     for (const auto c : question) {
       input.push_back(c);
     }
     uint c = 0;
     if (vm.execute(nn, input, output, c)) {
       std::cout << "Cycles: " << c << std::endl;
+      auto first = true;
       for (const auto o : output) {
         if (o == 0) {
           break;
         }
+        if (first) {
+          first = false;
+        } else {
+          std::cout << ',';
+        }
         std::cout << std::bitset<8>(o);
       }
       std::cout << std::endl;
+      first = true;
       for (const auto o : output) {
         if (o == 0) {
           break;
+        }
+        if (first) {
+          first = false;
+        } else {
+          std::cout << ',';
         }
         std::cout << o;
       }
@@ -160,15 +175,17 @@ bool run(std::vector<std::string> options, std::string parameter) {
 }
 
 int evolve(std::vector<std::string> options, std::string parameter) {
+  std::set<sbyte> alphabet;
   std::string directory = "./population";
-  uint population = 100;
+
+  uint population = 500;
   uint generation = 100;
-  uint lifespan = 3;
-  uint cycles = 10000;
-  uint neurons = 3;      // 6 // 2, 4, 8
-  uint states = 1;       // 2 // 3, 6, 12
-  uint actions = 2;      // 4 // 4, 8, 16
-  uint instructions = 3; // 6 // 5, 10, 20
+  uint lifespan = 5;
+  uint cycles = 5000;
+  uint neurons = 25;
+  uint states = 5;
+  uint actions = 3;
+  uint instructions = 2;
   uint links = (float)neurons * 2.5f;
 
   // TODO Parse Options
@@ -191,7 +208,17 @@ int evolve(std::vector<std::string> options, std::string parameter) {
     return -1;
   }
 
-  EA ea(parameter, cycles, neurons, states, actions, instructions, links);
+  // Fitness Function
+  Fitness ff(parameter);
+  // Read question/answer from fitness function
+  std::string question, answer;
+  while (ff.next(question, answer)) {
+    alphabet.insert(question.cbegin(), question.cend());
+    alphabet.insert(answer.cbegin(), answer.cend());
+  }
+
+  EA ea(alphabet, parameter, cycles, neurons, states, actions, instructions,
+        links);
 
   if (!ea.load(directory)) {
     return -1;
@@ -202,6 +229,7 @@ int evolve(std::vector<std::string> options, std::string parameter) {
   std::map<std::string, uint> ages;
   std::string best;
   std::string worst;
+  uint goat = std::numeric_limits<uint>::max();
 
   for (int g = 0; g < generation; g++) {
     std::cout << "================" << std::endl;
@@ -235,13 +263,17 @@ int evolve(std::vector<std::string> options, std::string parameter) {
     }
 
     if (!best.empty()) {
-      if (!ea.save(directory, best, ea.population[best])) {
-        return -1;
+      if (const auto e = ea.errors[best]; e < goat) {
+        goat = e;
+        if (!ea.save(directory, best, ea.population[best])) {
+          return -1;
+        }
       }
     }
 
+    const auto target = average + (max - average) / 2;
     for (const auto [name, error] : ea.errors) {
-      if (error > average) {
+      if (error > target) {
         ea.failed.insert(name);
       }
     }
@@ -304,13 +336,13 @@ int evolve(std::vector<std::string> options, std::string parameter) {
     std::cout << "Duplicates: " << duplicates << std::endl;
     std::cout << "Defects: " << defects << std::endl;
 
-    std::cout << "Neurons per Network: " << (ns / ea.population.size())
-              << std::endl;
-    std::cout << "States per Neuron: " << (ss / ns) << std::endl;
-    std::cout << "Actions per State: " << (as / ss) << std::endl;
-    std::cout << "Instructions per Action: " << (is / as) << std::endl;
-    std::cout << "Links per Network: " << (ls / ea.population.size())
-              << std::endl;
+    if (const auto ps = ea.population.size(); ps > 0) {
+      std::cout << "Neurons per Network: " << (ns / ps) << std::endl;
+      std::cout << "States per Neuron: " << (ss / ns) << std::endl;
+      std::cout << "Actions per State: " << (as / ss) << std::endl;
+      std::cout << "Instructions per Action: " << (is / as) << std::endl;
+      std::cout << "Links per Network: " << (ls / ps) << std::endl;
+    }
   }
 
   if (best.empty() || best == worst) {

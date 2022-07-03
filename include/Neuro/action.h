@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <ostream>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -28,15 +29,17 @@ public:
 
   bool duplicate(const Action &a);
 
-  bool generate(Random &rng, const uint states, const uint instructions);
+  bool generate(Random &rng, const std::set<sbyte> alphabet, const uint states,
+                const uint instructions);
   std::shared_ptr<Instruction>
-  generateInstruction(Random &rng, const uint states, const uint range);
+  generateInstruction(Random &rng, const std::set<sbyte> alphabet,
+                      const uint states, const uint range);
   std::shared_ptr<Instruction>
   generateJump(Random &rng, const Jump::ConditionCode cc, const uint range);
 
   bool mate(Random &rng, const Action &a, const Action &b);
 
-  bool mutate(Random &rng, const uint states);
+  bool mutate(Random &rng, const std::set<sbyte> alphabet, const uint states);
 
   bool emit(std::ostream &os) const;
 };

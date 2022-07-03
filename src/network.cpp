@@ -34,11 +34,12 @@ bool Network::load(const std::string name) {
   return true;
 }
 
-bool Network::generate(Random &rng, const uint neurons, const uint states,
+bool Network::generate(Random &rng, const std::set<sbyte> alphabet,
+                       const uint neurons, const uint states,
                        const uint actions, const uint instructions,
                        const uint links) {
   for (int nid = 0; nid < neurons; nid++) {
-    if (!generateNeuron(rng, nid, states, actions, instructions)) {
+    if (!generateNeuron(rng, alphabet, nid, states, actions, instructions)) {
       return false;
     }
   }
@@ -50,11 +51,12 @@ bool Network::generate(Random &rng, const uint neurons, const uint states,
   return true;
 }
 
-bool Network::generateNeuron(Random &rng, const uint id, const uint states,
+bool Network::generateNeuron(Random &rng, const std::set<sbyte> alphabet,
+                             const uint id, const uint states,
                              const uint actions, const uint instructions) {
   auto n = std::make_unique<Neuron>(id);
 
-  if (!n->generate(rng, states, actions, instructions)) {
+  if (!n->generate(rng, alphabet, states, actions, instructions)) {
     std::cerr << "Network Error: Neuron Generation Failed" << std::endl;
     return false;
   }
@@ -182,13 +184,14 @@ bool Network::mate(Random &rng, const Network &a, const Network &b) {
   return true;
 }
 
-bool Network::mutate(Random &rng, const uint states, const uint actions,
+bool Network::mutate(Random &rng, const std::set<sbyte> alphabet,
+                     const uint states, const uint actions,
                      const uint instructions) {
   // Default case is twice as likely
   switch (rng.nextUnsignedInt() % 10) {
   case 0: {
     // Add Neuron
-    return addNeuron(rng, states, actions, instructions);
+    return addNeuron(rng, alphabet, states, actions, instructions);
   }
   case 1: {
     // Remove Neuron
@@ -208,7 +211,7 @@ bool Network::mutate(Random &rng, const uint states, const uint actions,
       return false;
     }
     auto &n = neurons[rng.nextUnsignedInt() % ns];
-    return n->addState(rng, actions, instructions);
+    return n->addState(rng, alphabet, actions, instructions);
   }
   case 3: {
     // Remove State
@@ -240,7 +243,7 @@ bool Network::mutate(Random &rng, const uint states, const uint actions,
       return false;
     }
     auto &s = n->states[rng.nextUnsignedInt() % ss];
-    return s->addAction(rng, ss, instructions);
+    return s->addAction(rng, alphabet, ss, instructions);
   }
   case 5: {
     // Remove Action
@@ -282,7 +285,7 @@ bool Network::mutate(Random &rng, const uint states, const uint actions,
     auto &s = n->states[rng.nextUnsignedInt() % ss];
     const auto r = rng.nextSignedInt();
     if (r < 0 && s->wildcard) {
-      if (!s->wildcard.value()->mutate(rng, ss)) {
+      if (!s->wildcard.value()->mutate(rng, alphabet, ss)) {
         return false;
       }
     } else {
@@ -294,7 +297,7 @@ bool Network::mutate(Random &rng, const uint states, const uint actions,
       auto itr = s->actions.begin();
       std::advance(itr, r % as);
       auto &a = itr->second;
-      if (!a->mutate(rng, ss)) {
+      if (!a->mutate(rng, alphabet, ss)) {
         return false;
       }
     }
@@ -304,11 +307,12 @@ bool Network::mutate(Random &rng, const uint states, const uint actions,
   return true;
 }
 
-bool Network::addNeuron(Random &rng, const uint states, const uint actions,
+bool Network::addNeuron(Random &rng, const std::set<sbyte> alphabet,
+                        const uint states, const uint actions,
                         const uint instructions) {
   const auto nid = rng.nextUnsignedInt() % (neurons.size() + 1);
 
-  if (!generateNeuron(rng, nid, states, actions, instructions)) {
+  if (!generateNeuron(rng, alphabet, nid, states, actions, instructions)) {
     std::cerr << "Network Error: Neuron Generation Failed" << std::endl;
     return false;
   }

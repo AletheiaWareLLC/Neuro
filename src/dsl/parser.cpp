@@ -266,11 +266,12 @@ bool Parser::parseInstruction(Action &a) {
       return false;
     }
     // Ensure constant in within sbyte range
-    if (constant < -128 || constant > 127) {
+    if (constant < std::numeric_limits<sbyte>::min() ||
+        constant > std::numeric_limits<sbyte>::max()) {
       lexer.error() << "Constant Out-of-Range: " << constant << std::endl;
       return false;
     }
-    i = std::make_shared<Push>(constant);
+    i = std::make_shared<Push>((sbyte)constant);
     break;
   }
   case Token::Category::Drop:

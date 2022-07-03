@@ -49,14 +49,14 @@ bool EA::repopulate(Random &rng, const uint limit, uint &randoms,
   while (population.size() < limit) {
     const auto ns = rng.nextUnsignedInt() % neurons + 1;
     const auto ss = rng.nextUnsignedInt() % states + 1;
-    const auto rs = rng.nextUnsignedInt() % actions + 1;
+    const auto as = rng.nextUnsignedInt() % actions + 1;
     const auto is = rng.nextUnsignedInt() % instructions + 1;
     const auto ls = rng.nextUnsignedInt() % links + 1;
     auto network = std::make_unique<Network>();
-    if (network->generate(rng, ns, ss, rs, is, ls)) {
+    if (network->generate(rng, alphabet, ns, ss, as, is, ls)) {
       if (network->neurons.empty()) {
         std::cerr << "EA Error: Random Network has no Neurons: " << ns << " "
-                  << ss << " " << rs << " " << is << " " << ls << " "
+                  << ss << " " << as << " " << is << " " << ls << " "
                   << std::endl;
         return false;
       }
@@ -96,13 +96,13 @@ bool EA::evaluate(Random &rng, std::string &best, std::string &worst, uint &min,
 
   for (const auto &[name, network] : population) {
     // Start at character count to incentivize space efficiency
-    errors[name] = sizes[name] / 100;
+    errors[name] = sizes[name];
   }
 
   // Read question/answer from fitness function
   std::string question, answer;
+
   while (ff.next(question, answer)) {
-    // std::cout << "Question: " << question << std::endl;
 
     std::vector<sbyte> input(question.size(), 0);
     for (int i = 0; i < question.size(); i++) {
@@ -115,21 +115,17 @@ bool EA::evaluate(Random &rng, std::string &best, std::string &worst, uint &min,
         // Skip
         continue;
       }
+
       std::vector<sbyte> output;
       uint c = 0;
-      if (vm.execute(*network.get(), input, output, c)) {
-        // std::cout << "Answer: " << output.size() << " : ";
-        // for (auto c : output) {
-        // std::cout << c;
-        //}
-        // std::cout << std::endl;
 
+      if (vm.execute(*network.get(), input, output, c)) {
         // Compare answer to fitness function
         // Start at cycle count to incentivize time efficiency
-        auto error = c / 10;
+        auto error = c;
         int i = 0;
         for (; i < output.size() && i < answer.size(); i++) {
-          error += abs(output[i] - question[i]);
+          error += abs(output[i] - answer[i]);
         }
         for (; i < answer.size(); i++) {
           // Incomplete answer is penalized
@@ -284,7 +280,10 @@ bool EA::mutate(Random &rng, uint &mutations, uint &duplicates, uint &defects) {
   const std::string mutant = itr->first;
   // std::cout << "Mutating: " << mutant << std::endl;
   auto &network = itr->second;
-  if (network->mutate(rng, states, actions, instructions)) {
+  const auto ss = rng.nextUnsignedInt() % states + 1;
+  const auto as = rng.nextUnsignedInt() % actions + 1;
+  const auto is = rng.nextUnsignedInt() % instructions + 1;
+  if (network->mutate(rng, alphabet, ss, as, is)) {
     if (network->neurons.empty()) {
       std::cerr << "EA Error: Mutated Network has no Neurons" << std::endl;
       return false;

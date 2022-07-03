@@ -2,6 +2,7 @@
 #define NEURON_H
 
 #include <ostream>
+#include <set>
 #include <stack>
 #include <vector>
 
@@ -9,7 +10,7 @@
 #include <Neuro/random.h>
 #include <Neuro/state.h>
 
-constexpr auto StackLimit = 100;
+constexpr auto StackLimit = 1000;
 
 class Neuron {
 public:
@@ -26,12 +27,13 @@ public:
 
   bool duplicate(const Neuron &n);
 
-  bool generate(Random &rng, const uint states, const uint actions,
-                const uint instructions);
+  bool generate(Random &rng, const std::set<sbyte> alphabet, const uint states,
+                const uint actions, const uint instructions);
 
   bool mate(Random &rng, const Neuron &a, const Neuron &b);
 
-  bool addState(Random &rng, const uint actions, const uint instructions);
+  bool addState(Random &rng, const std::set<sbyte> alphabet, const uint actions,
+                const uint instructions);
 
   bool removeState(const uint id);
 

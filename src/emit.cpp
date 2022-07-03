@@ -14,20 +14,22 @@ bool Network::emit(std::ostream &os) const {
     os << '\n';
   }
 
-  for (const auto &[k, v] : links) {
-    os << "link " << k << " {";
-    bool first = true;
-    for (const auto c : v) {
-      if (first) {
-        first = false;
-      } else {
-        os << ' ';
+  if (!links.empty()) {
+    for (const auto &[k, v] : links) {
+      os << "link " << k << " {";
+      bool first = true;
+      for (const auto c : v) {
+        if (first) {
+          first = false;
+        } else {
+          os << ' ';
+        }
+        os << c;
       }
-      os << c;
+      os << "}\n";
     }
-    os << "}\n";
+    os << '\n';
   }
-  os << '\n';
   return true;
 }
 

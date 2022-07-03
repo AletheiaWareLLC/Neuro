@@ -10,84 +10,94 @@ bool Action::duplicate(const Action &a) {
   return true;
 }
 
-bool Action::generate(Random &rng, const uint states, const uint instructions) {
+bool Action::generate(Random &rng, const std::set<sbyte> alphabet,
+                      const uint states, const uint instructions) {
   for (int i = 0; i < instructions; i++) {
     this->instructions.push_back(
-        generateInstruction(rng, states, instructions + 1));
+        generateInstruction(rng, alphabet, states, instructions + 1));
   }
   return true;
 }
 
 std::shared_ptr<Instruction>
-Action::generateInstruction(Random &rng, const uint states, const uint range) {
+Action::generateInstruction(Random &rng, const std::set<sbyte> alphabet,
+                            const uint states, const uint range) {
   // To reduce stack underflows, instructions that increase stack size are
   // artificially made more likely.
   // Send is also made artificially more likely to increase communication
   // between neurons.
-  switch (rng.nextUnsignedInt() % 35) {
-  case 0:
-    return std::make_shared<Not>(); // Stack size unchanged
-  case 1:
-    return std::make_shared<And>(); // Stack size decreased
-  case 2:
-    return std::make_shared<Or>(); // Stack size decreased
-  case 3:
-    return std::make_shared<Xor>(); // Stack size decreased
-  case 4:
-    return std::make_shared<Lls>(); // Stack size unchanged
-  case 5:
-    return std::make_shared<Rls>(); // Stack size unchanged
-  case 6:
-    return std::make_shared<Add>(); // Stack size decreased
-  case 7:
-    return std::make_shared<Sub>(); // Stack size decreased
-  case 8:
-    return std::make_shared<Mul>(); // Stack size decreased
-  case 9:
-    return std::make_shared<Div>(); // Stack size decreased
-  case 10:
-    return std::make_shared<Mod>(); // Stack size decreased
-  case 11:
-    return std::make_shared<Ras>(); // Stack size unchanged
-  case 12:
-    return generateJump(rng, Jump::ConditionCode::EZ,
-                        range); // Stack size decreased
-  case 13:
-    return generateJump(rng, Jump::ConditionCode::NZ,
-                        range); // Stack size decreased
-  case 14:
-    return generateJump(rng, Jump::ConditionCode::LE,
-                        range); // Stack size decreased
-  case 15:
-    return generateJump(rng, Jump::ConditionCode::LZ,
-                        range); // Stack size decreased
-  case 16:
-    return std::make_shared<Goto>(rng.nextUnsignedInt() %
-                                  states); // Stack size unchanged
-  case 17:
-  case 18:
-  case 19:
-  case 20:
-  case 21:
-  case 22:
-  case 23:
-  case 24:
-  case 25: // Push is 9x more likely
-    return std::make_shared<Push>(
-        (sbyte)rng.nextUnsignedInt()); // Stack size increased
-  case 26:
-    return std::make_shared<Drop>(); // Stack size decreased
-  case 27:
-  case 28:
-  case 29:
-  case 30:
-  case 31:                           // Copy is 5x more likely
-    return std::make_shared<Copy>(); // Stack size increased
-  case 32:
-    return std::make_shared<Swap>(); // Stack size unchanged
-  default:                           // Send is 2x more likely
-    return std::make_shared<Send>(); // Stack size unchanged
+  const auto i = rng.nextSignedInt();
+  if (i >= 0) {
+    switch (i % 33) {
+    case 0:
+      return std::make_shared<Not>(); // Stack size unchanged
+    case 1:
+      return std::make_shared<And>(); // Stack size decreased
+    case 2:
+      return std::make_shared<Or>(); // Stack size decreased
+    case 3:
+      return std::make_shared<Xor>(); // Stack size decreased
+    case 4:
+      return std::make_shared<Lls>(); // Stack size unchanged
+    case 5:
+      return std::make_shared<Rls>(); // Stack size unchanged
+    case 6:
+      return std::make_shared<Add>(); // Stack size decreased
+    case 7:
+      return std::make_shared<Sub>(); // Stack size decreased
+    case 8:
+      return std::make_shared<Mul>(); // Stack size decreased
+    case 9:
+      return std::make_shared<Div>(); // Stack size decreased
+    case 10:
+      return std::make_shared<Mod>(); // Stack size decreased
+    case 11:
+      return std::make_shared<Ras>(); // Stack size unchanged
+    case 12:
+      return generateJump(rng, Jump::ConditionCode::EZ,
+                          range); // Stack size decreased
+    case 13:
+      return generateJump(rng, Jump::ConditionCode::NZ,
+                          range); // Stack size decreased
+    case 14:
+      return generateJump(rng, Jump::ConditionCode::LE,
+                          range); // Stack size decreased
+    case 15:
+      return generateJump(rng, Jump::ConditionCode::LZ,
+                          range); // Stack size decreased
+    case 16:
+      return std::make_shared<Goto>(rng.nextUnsignedInt() %
+                                    states); // Stack size unchanged
+    case 17:
+    case 18:
+    case 19:
+    case 20:
+    case 21:
+    case 22:
+    case 23:
+    case 24:
+    case 25: { // Push is 9x more likely
+      auto constant = 0;
+      if (const auto as = alphabet.size(); as > 0) {
+        auto itr = alphabet.cbegin();
+        std::advance(itr, rng.nextUnsignedInt() % as);
+        constant = *itr;
+      }
+      return std::make_shared<Push>(constant); // Stack size increased
+    }
+    case 26:
+      return std::make_shared<Drop>(); // Stack size decreased
+    case 27:
+    case 28:
+    case 29:
+    case 30:
+    case 31:                           // Copy is 5x more likely
+      return std::make_shared<Copy>(); // Stack size increased
+    case 32:
+      return std::make_shared<Swap>(); // Stack size unchanged
+    }
   }
+  return std::make_shared<Send>();
 }
 
 std::shared_ptr<Instruction> Action::createJump(const Jump::ConditionCode cc,
@@ -142,13 +152,14 @@ bool Action::mate(Random &rng, const Action &a, const Action &b) {
   return true;
 }
 
-bool Action::mutate(Random &rng, const uint states) {
+bool Action::mutate(Random &rng, const std::set<sbyte> alphabet,
+                    const uint states) {
   // Default case is twice as likely
   switch (rng.nextUnsignedInt() % 4) {
   case 0: {
     // Add Instruction
     instructions.push_back(
-        generateInstruction(rng, states, instructions.size() + 1));
+        generateInstruction(rng, alphabet, states, instructions.size() + 1));
     break;
   }
   case 1: {
@@ -183,7 +194,7 @@ bool Action::mutate(Random &rng, const uint states) {
 
     // Replace Instruction
     instructions[iid] =
-        generateInstruction(rng, states, instructions.size() + 1);
+        generateInstruction(rng, alphabet, states, instructions.size() + 1);
     break;
   }
   }

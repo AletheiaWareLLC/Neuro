@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <Neuro/alphabet.h>
 #include <Neuro/network.h>
 #include <Neuro/random.h>
 #include <Neuro/vm/vm.h>
@@ -57,10 +58,10 @@ TEST(NetworkTest, LoadEmit) {
 
 TEST(NetworkTest, Generate) {
   FakeRandom rng;
+  rng.sints.push(-1); // Send Instruction
   rng.sints.push(-1); // Wildcard Action
+  rng.sints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard Action
-  rng.uints.push(33); // Send Instruction
-  rng.uints.push(0);  // Not Instruction
   rng.uints.push(0);  // Link Source
   rng.uints.push(1);  // Link Destination
 
@@ -70,7 +71,8 @@ TEST(NetworkTest, Generate) {
   const auto instructions = 1;
   const auto links = 1;
   Network nn;
-  ASSERT_TRUE(nn.generate(rng, neurons, states, actions, instructions, links));
+  ASSERT_TRUE(
+      nn.generate(rng, numeric, neurons, states, actions, instructions, links));
 
   std::stringstream ss;
   ASSERT_TRUE(nn.emit(ss));
@@ -252,11 +254,11 @@ TEST(NetworkTest, Mutate) {
   // Adding
   rng.uints.push(0);                 // Add Neuron
   rng.uints.push(nn.neurons.size()); // At the End
+  rng.sints.push(-1);                // Send Instruction
   rng.sints.push(-1);                // Wildcard Action
-  rng.uints.push(33);                // Send Instruction
   rng.uints.push(0);                 // Link from Self from Self
   rng.uints.push(0);                 // Link to Self from Self
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
 
   ASSERT_EQ(1, nn.neurons.size());
   auto &n0 = *nn.neurons[0];
@@ -269,12 +271,12 @@ TEST(NetworkTest, Mutate) {
 
   rng.uints.push(0);                 // Add Neuron
   rng.uints.push(nn.neurons.size()); // At the End
-  rng.sints.push(-1);                // Wildcard Action
-  rng.uints.push(16);                // Goto Instruction
+  rng.sints.push(16);                // Goto Instruction
   rng.uints.push(1);                 // Goto State ID
+  rng.sints.push(-1);                // Wildcard Action
   rng.uints.push(1);                 // Link from 1 to Self
   rng.uints.push(0);                 // Link to 0 from Self
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
 
   ASSERT_EQ(2, nn.neurons.size());
   auto &n1 = *nn.neurons[1];
@@ -296,49 +298,49 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(2);                // Add State
   rng.uints.push(0);                // Neuron ID
   rng.uints.push(n0.states.size()); // At the End
-  rng.sints.push(10);               // Pattern Action
-  rng.uints.push(0);                // Not Instruction
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  rng.sints.push(0);                // Not Instruction
+  rng.sints.push(0);                // Pattern Action
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
 
   ASSERT_EQ(2, n0.states.size());
   auto &n0s1 = *n0.states[1];
   ASSERT_FALSE(n0s1.wildcard);
   ASSERT_EQ(1, n0s1.actions.size());
-  ASSERT_EQ(10, n0s1.actions.begin()->first);
+  ASSERT_EQ('0', n0s1.actions.begin()->first);
 
   rng.uints.push(2);                // Add State
   rng.uints.push(1);                // Neuron ID
   rng.uints.push(n1.states.size()); // At the End
-  rng.sints.push(11);               // Pattern Action
-  rng.uints.push(2);                // Or Instruction
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  rng.sints.push(2);                // Or Instruction
+  rng.sints.push(1);                // Pattern Action
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
 
   ASSERT_EQ(2, n1.states.size());
   auto &n1s1 = *n1.states[1];
   ASSERT_FALSE(n1s1.wildcard);
   ASSERT_EQ(1, n1s1.actions.size());
-  ASSERT_EQ(11, n1s1.actions.begin()->first);
+  ASSERT_EQ('1', n1s1.actions.begin()->first);
 
   // Both Neurons have two States, State 0 with a Wildcard Action, and State 1
   // with a Pattern Action (10, 11 resp.)
 
-  rng.uints.push(4);  // Add Action
-  rng.uints.push(0);  // Neuron ID
-  rng.uints.push(0);  // State ID
-  rng.sints.push(20); // Pattern Action
-  rng.uints.push(3);  // Xor Instruction
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  rng.uints.push(4); // Add Action
+  rng.uints.push(0); // Neuron ID
+  rng.uints.push(0); // State ID
+  rng.sints.push(3); // Xor Instruction
+  rng.sints.push(2); // Pattern Action
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_EQ(1, n0s0.actions.size());
-  ASSERT_EQ(20, n0s0.actions.begin()->first);
+  ASSERT_EQ('2', n0s0.actions.begin()->first);
 
-  rng.uints.push(4);  // Add Action
-  rng.uints.push(1);  // Neuron ID
-  rng.uints.push(0);  // State ID
-  rng.sints.push(21); // Pattern Action
-  rng.uints.push(4);  // Lls Instruction
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  rng.uints.push(4); // Add Action
+  rng.uints.push(1); // Neuron ID
+  rng.uints.push(0); // State ID
+  rng.sints.push(4); // Lls Instruction
+  rng.sints.push(3); // Pattern Action
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_EQ(1, n1s0.actions.size());
-  ASSERT_EQ(21, n1s0.actions.begin()->first);
+  ASSERT_EQ('3', n1s0.actions.begin()->first);
 
   // Both Neurons have two States, State 0 with a Wildcard Action and a Pattern
   // Action (20, 21 resp), and State 1 with a Pattern Action (10, 11 resp.)
@@ -346,7 +348,7 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(6); // Add Link
   rng.uints.push(0); // Source Neuron
   rng.uints.push(1); // Destination Neuron
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_EQ(2, nn.links.size());
   ASSERT_EQ(2, nn.links[0].size());
   itr = nn.links[0].begin();
@@ -365,18 +367,18 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(8); // Mutate Action
   rng.uints.push(0); // Neuron ID
   rng.uints.push(1); // State ID
-  rng.sints.push(0); // Pattern Action (First Action in Map)
   rng.uints.push(0); // Mutation Type
-  rng.uints.push(0); // Not Instruction
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
-  auto &n0s1a10 = *n0s1.actions[10];
+  rng.sints.push(0); // Not Instruction
+  rng.sints.push(0); // Pattern Action (First Action in Map)
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
+  auto &n0s1a10 = *n0s1.actions['0'];
   ASSERT_EQ(2, n0s1a10.instructions.size());
 
   // Removing
   rng.uints.push(7); // Remove Link
   rng.uints.push(0); // First Source in Map
   rng.uints.push(0); // First Destination in Set
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_EQ(2, nn.links.size());
   ASSERT_EQ(1, nn.links[0].size());
   ASSERT_EQ(1, *nn.links[0].begin());
@@ -390,20 +392,20 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(0);  // Neuron ID
   rng.uints.push(0);  // State ID
   rng.sints.push(-1); // Wildcard Action
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_FALSE(n0s0.wildcard);
 
-  rng.uints.push(5);  // Remove Action
-  rng.uints.push(1);  // Neuron ID
-  rng.uints.push(0);  // State ID
-  rng.sints.push(21); // Pattern Action
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  rng.uints.push(5); // Remove Action
+  rng.uints.push(1); // Neuron ID
+  rng.uints.push(0); // State ID
+  rng.sints.push(1); // Pattern Action
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_TRUE(n1s0.actions.empty());
 
   rng.uints.push(3); // Remove State
   rng.uints.push(0); // Neuron ID
   rng.uints.push(0); // State ID
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_EQ(1, n0.states.size());
   ASSERT_EQ(0, n1s0.id);
   ASSERT_TRUE(n1s0.wildcard);
@@ -414,7 +416,7 @@ TEST(NetworkTest, Mutate) {
 
   rng.uints.push(1); // Remove Neuron
   rng.uints.push(0); // Neuron ID
-  ASSERT_TRUE(nn.mutate(rng, 1, 1, 1));
+  ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_EQ(1, nn.neurons.size());
   auto &n0new = *nn.neurons[0];
   ASSERT_EQ(0, n0new.id);

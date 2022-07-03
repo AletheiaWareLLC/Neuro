@@ -8,3 +8,7 @@ project(NeuroSamples)
 add_executable(NeuroSamples_Absolute absolute/absolute.cpp)
 
 add_executable(NeuroSamples_Calculator calculator/calculator.cpp)
+
+include_directories("../../../include")
+
+add_executable(NeuroSamples_Not not/not.cpp)

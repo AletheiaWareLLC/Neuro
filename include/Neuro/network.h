@@ -29,19 +29,21 @@ public:
   bool load(std::istream &in);
   bool load(const std::string name);
 
-  bool generate(Random &rng, const uint neurons, const uint states,
-                const uint actions, const uint instructions, const uint links);
-  bool generateNeuron(Random &rng, const uint id, const uint states,
-                      const uint actions, const uint instructions);
+  bool generate(Random &rng, const std::set<sbyte> alphabet, const uint neurons,
+                const uint states, const uint actions, const uint instructions,
+                const uint links);
+  bool generateNeuron(Random &rng, const std::set<sbyte> alphabet,
+                      const uint id, const uint states, const uint actions,
+                      const uint instructions);
   bool generateLink(Random &rng);
 
   bool mate(Random &rng, const Network &a, const Network &b);
 
-  bool mutate(Random &rng, const uint states, const uint actions,
-              const uint instructions);
+  bool mutate(Random &rng, const std::set<sbyte> alphabet, const uint states,
+              const uint actions, const uint instructions);
 
-  bool addNeuron(Random &rng, const uint states, const uint actions,
-                 const uint instructions);
+  bool addNeuron(Random &rng, const std::set<sbyte> alphabet, const uint states,
+                 const uint actions, const uint instructions);
 
   bool removeNeuron(const uint id);
 

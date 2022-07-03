@@ -1,18 +1,19 @@
 #include <gtest/gtest.h>
 
+#include <Neuro/alphabet.h>
 #include <Neuro/random.h>
 #include <Neuro/state.h>
 
 TEST(StateTest, Duplicate) {
   FakeRandom rng;
   State a(1);
-  rng.uints.push(0);  // Not Instruction
+  rng.sints.push(0);  // Not Instruction
   rng.sints.push(0);  // Pattern Action
-  rng.uints.push(1);  // And Instruction
-  rng.sints.push(10); // Pattern Action
-  rng.uints.push(0);  // Not Instruction
+  rng.sints.push(1);  // And Instruction
+  rng.sints.push(1);  // Pattern Action
+  rng.sints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
-  ASSERT_TRUE(a.generate(rng, 1, 3, 1));
+  ASSERT_TRUE(a.generate(rng, numeric, 1, 3, 1));
 
   State b;
   ASSERT_TRUE(b.duplicate(a));
@@ -24,40 +25,40 @@ TEST(StateTest, Duplicate) {
 
 TEST(StateTest, Generate) {
   FakeRandom rng;
-  rng.uints.push(0);  // Not Instruction
+  rng.sints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
 
   State s;
 
   ASSERT_FALSE(s.wildcard);
 
-  ASSERT_TRUE(s.generate(rng, 1, 1, 1));
+  ASSERT_TRUE(s.generate(rng, numeric, 1, 1, 1));
 
   ASSERT_TRUE(s.wildcard);
 
-  rng.uints.push(0); // Not Instruction
+  rng.sints.push(0); // Not Instruction
   rng.sints.push(0); // Pattern Action
 
-  ASSERT_TRUE(s.generate(rng, 1, 1, 1));
+  ASSERT_TRUE(s.generate(rng, numeric, 1, 1, 1));
 
   ASSERT_EQ(1, s.actions.size());
-  ASSERT_EQ(0, s.actions.begin()->first);
+  ASSERT_EQ('0', s.actions.begin()->first);
 }
 
 TEST(StateTest, Mate) {
   FakeRandom rng;
   State a;
-  rng.uints.push(0);  // Not Instruction
+  rng.sints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
-  rng.uints.push(1);  // And Instruction
-  rng.sints.push(10); // Pattern Action
-  ASSERT_TRUE(a.generate(rng, 1, 2, 1));
+  rng.sints.push(1);  // And Instruction
+  rng.sints.push(1);  // Pattern Action
+  ASSERT_TRUE(a.generate(rng, numeric, 1, 2, 1));
   State b;
-  rng.uints.push(2);  // Or Instruction
+  rng.sints.push(2);  // Or Instruction
   rng.sints.push(-1); // Wildcard
-  rng.uints.push(3);  // Xor Instruction
-  rng.sints.push(20); // Pattern Action
-  ASSERT_TRUE(b.generate(rng, 1, 2, 1));
+  rng.sints.push(3);  // Xor Instruction
+  rng.sints.push(2);  // Pattern Action
+  ASSERT_TRUE(b.generate(rng, numeric, 1, 2, 1));
 
   rng.uints.push(1); // Action 1 (Pattern) Split Index
   rng.uints.push(2); // Action 2 (Wildcard) Split Index
@@ -66,22 +67,22 @@ TEST(StateTest, Mate) {
 
   ASSERT_EQ(1, c.actions.size());
   auto itr = c.actions.cbegin();
-  ASSERT_EQ(10, itr->first);
+  ASSERT_EQ('1', itr->first);
   ASSERT_TRUE(c.wildcard);
 }
 
 TEST(StateTest, MateUnequalActionsA) {
   FakeRandom rng;
   State a;
-  rng.uints.push(0);  // Not Instruction
-  rng.sints.push(0);  // Pattern Action
-  rng.uints.push(1);  // And Instruction
-  rng.sints.push(10); // Pattern Action
-  ASSERT_TRUE(a.generate(rng, 1, 2, 1));
+  rng.sints.push(0); // Not Instruction
+  rng.sints.push(0); // Pattern Action
+  rng.sints.push(1); // And Instruction
+  rng.sints.push(1); // Pattern Action
+  ASSERT_TRUE(a.generate(rng, numeric, 1, 2, 1));
   State b;
-  rng.uints.push(3);  // Xor Instruction
-  rng.sints.push(20); // Pattern Action
-  ASSERT_TRUE(b.generate(rng, 1, 1, 1));
+  rng.sints.push(3); // Xor Instruction
+  rng.sints.push(2); // Pattern Action
+  ASSERT_TRUE(b.generate(rng, numeric, 1, 1, 1));
 
   rng.uints.push(1); // Action Split Index
   State c;
@@ -89,24 +90,24 @@ TEST(StateTest, MateUnequalActionsA) {
 
   ASSERT_EQ(2, c.actions.size());
   auto itr = c.actions.cbegin();
-  ASSERT_EQ(0, itr->first);
+  ASSERT_EQ('0', itr->first);
   itr++;
-  ASSERT_EQ(10, itr->first);
+  ASSERT_EQ('1', itr->first);
   ASSERT_FALSE(c.wildcard);
 }
 
 TEST(StateTest, MateUnequalActionsB) {
   FakeRandom rng;
   State a;
-  rng.uints.push(0); // Not Instruction
+  rng.sints.push(0); // Not Instruction
   rng.sints.push(0); // Pattern Action
-  ASSERT_TRUE(a.generate(rng, 1, 1, 1));
+  ASSERT_TRUE(a.generate(rng, numeric, 1, 1, 1));
   State b;
-  rng.uints.push(3);  // Xor Instruction
-  rng.sints.push(20); // Pattern Action
-  rng.uints.push(1);  // And Instruction
-  rng.sints.push(30); // Pattern Action
-  ASSERT_TRUE(b.generate(rng, 1, 2, 1));
+  rng.sints.push(3); // Xor Instruction
+  rng.sints.push(1); // Pattern Action
+  rng.sints.push(1); // And Instruction
+  rng.sints.push(2); // Pattern Action
+  ASSERT_TRUE(b.generate(rng, numeric, 1, 2, 1));
 
   rng.uints.push(1); // Action Split Index
   State c;
@@ -114,18 +115,18 @@ TEST(StateTest, MateUnequalActionsB) {
 
   ASSERT_EQ(2, c.actions.size());
   auto itr = c.actions.cbegin();
-  ASSERT_EQ(0, itr->first);
+  ASSERT_EQ('0', itr->first);
   itr++;
-  ASSERT_EQ(30, itr->first);
+  ASSERT_EQ('2', itr->first);
   ASSERT_FALSE(c.wildcard);
 }
 
 TEST(StateTest, MateWildcardA) {
   FakeRandom rng;
   State a;
-  rng.uints.push(0);  // Not Instruction
+  rng.sints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
-  ASSERT_TRUE(a.generate(rng, 1, 1, 1));
+  ASSERT_TRUE(a.generate(rng, numeric, 1, 1, 1));
   State b;
 
   State c;
@@ -139,9 +140,9 @@ TEST(StateTest, MateWildcardB) {
   FakeRandom rng;
   State a;
   State b;
-  rng.uints.push(0);  // Not Instruction
+  rng.sints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
-  ASSERT_TRUE(b.generate(rng, 1, 1, 1));
+  ASSERT_TRUE(b.generate(rng, numeric, 1, 1, 1));
 
   State c;
   ASSERT_TRUE(c.mate(rng, a, b));
@@ -154,14 +155,14 @@ TEST(StateTest, AddRemoveAction) {
   FakeRandom rng;
   State s;
 
-  rng.uints.push(0); // Not Instruction
+  rng.sints.push(0); // Not Instruction
   rng.sints.push(0); // Pattern Action
-  ASSERT_TRUE(s.addAction(rng, 1, 1));
+  ASSERT_TRUE(s.addAction(rng, numeric, 1, 1));
   ASSERT_FALSE(s.wildcard);
   ASSERT_EQ(1, s.actions.size());
-  rng.uints.push(1);  // And Instruction
+  rng.sints.push(1);  // And Instruction
   rng.sints.push(-1); // Wildcard
-  ASSERT_TRUE(s.addAction(rng, 1, 1));
+  ASSERT_TRUE(s.addAction(rng, numeric, 1, 1));
   ASSERT_TRUE(s.wildcard);
   ASSERT_EQ(1, s.actions.size());
 

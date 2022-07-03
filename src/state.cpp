@@ -30,13 +30,14 @@ bool State::duplicate(const State &s) {
   return true;
 }
 
-bool State::generate(Random &rng, const uint states, const uint actions,
+bool State::generate(Random &rng, const std::set<sbyte> alphabet,
+                     const uint states, const uint actions,
                      const uint instructions) {
 
   for (int i = 0; i < actions; i++) {
     auto a = std::make_unique<Action>();
 
-    if (!a->generate(rng, states, instructions)) {
+    if (!a->generate(rng, alphabet, states, instructions)) {
       std::cerr << "State Error: Action Generation Failed" << std::endl;
       return false;
     }
@@ -45,7 +46,13 @@ bool State::generate(Random &rng, const uint states, const uint actions,
     if (pattern < 0) {
       wildcard = std::move(a);
     } else {
-      this->actions[(sbyte)pattern] = std::move(a);
+      auto p = 0;
+      if (const auto as = alphabet.size(); as > 0) {
+        auto itr = alphabet.cbegin();
+        std::advance(itr, pattern % as);
+        p = *itr;
+      }
+      this->actions[p] = std::move(a);
     }
   }
   return true;
@@ -117,19 +124,26 @@ bool State::mate(Random &rng, const State &a, const State &b) {
   return true;
 }
 
-bool State::addAction(Random &rng, const uint states, const uint instructions) {
+bool State::addAction(Random &rng, const std::set<sbyte> alphabet,
+                      const uint states, const uint instructions) {
   auto a = std::make_unique<Action>();
 
-  if (!a->generate(rng, states, instructions)) {
+  if (!a->generate(rng, alphabet, states, instructions)) {
     std::cerr << "State Error: Action Generation Failed" << std::endl;
     return false;
   }
 
-  const auto r = rng.nextSignedInt();
-  if (r < 0) {
+  const auto pattern = rng.nextSignedInt();
+  if (pattern < 0) {
     wildcard = std::move(a);
   } else {
-    actions[(sbyte)r] = std::move(a);
+    auto p = 0;
+    if (const auto as = alphabet.size(); as > 0) {
+      auto itr = alphabet.cbegin();
+      std::advance(itr, pattern % as);
+      p = *itr;
+    }
+    actions[p] = std::move(a);
   }
   return true;
 }

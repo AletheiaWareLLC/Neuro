@@ -8,7 +8,7 @@ int main() {
   std::uniform_int_distribution<int> dist(std::numeric_limits<int>::min(),
                                           std::numeric_limits<int>::max());
 
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 1000; i++) {
     auto a = dist(rng);
     auto b = dist(rng);
     int c;

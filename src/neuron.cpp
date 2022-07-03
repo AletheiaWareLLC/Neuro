@@ -18,13 +18,14 @@ bool Neuron::duplicate(const Neuron &n) {
   return true;
 }
 
-bool Neuron::generate(Random &rng, const uint states, const uint actions,
+bool Neuron::generate(Random &rng, const std::set<sbyte> alphabet,
+                      const uint states, const uint actions,
                       const uint instructions) {
 
   for (int sid = 0; sid < states; sid++) {
     auto s = std::make_unique<State>(sid);
 
-    if (!s->generate(rng, states, actions, instructions)) {
+    if (!s->generate(rng, alphabet, states, actions, instructions)) {
       std::cerr << "Neuron Error: State Generation Failed" << std::endl;
       return false;
     }
@@ -78,15 +79,15 @@ bool Neuron::mate(Random &rng, const Neuron &a, const Neuron &b) {
   return true;
 }
 
-bool Neuron::addState(Random &rng, const uint actions,
-                      const uint instructions) {
+bool Neuron::addState(Random &rng, const std::set<sbyte> alphabet,
+                      const uint actions, const uint instructions) {
   const auto ss = states.size();
 
   const auto id = rng.nextUnsignedInt() % (ss + 1);
 
   auto s = std::make_unique<State>(id);
 
-  if (!s->generate(rng, ss + 1, actions, instructions)) {
+  if (!s->generate(rng, alphabet, ss + 1, actions, instructions)) {
     std::cerr << "Neuron Error: State Generation Failed" << std::endl;
     return false;
   }

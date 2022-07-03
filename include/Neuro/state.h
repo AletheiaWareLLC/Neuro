@@ -4,6 +4,7 @@
 #include <map>
 #include <optional>
 #include <ostream>
+#include <set>
 
 #include <Neuro/action.h>
 #include <Neuro/data.h>
@@ -23,12 +24,13 @@ public:
 
   bool duplicate(const State &s);
 
-  bool generate(Random &rng, const uint states, const uint actions,
-                const uint instructions);
+  bool generate(Random &rng, const std::set<sbyte> alphabet, const uint states,
+                const uint actions, const uint instructions);
 
   bool mate(Random &rng, const State &a, const State &b);
 
-  bool addAction(Random &rng, const uint states, const uint instructions);
+  bool addAction(Random &rng, const std::set<sbyte> alphabet, const uint states,
+                 const uint instructions);
 
   bool removeAction(const sint id);
 

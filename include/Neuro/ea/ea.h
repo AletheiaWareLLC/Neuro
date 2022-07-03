@@ -12,6 +12,7 @@
 
 class EA {
 public:
+  const std::set<sbyte> alphabet;
   const std::string fitness;
   const uint cycles;
   const uint neurons;
@@ -24,10 +25,10 @@ public:
   std::map<std::string, uint> errors;
   std::set<std::string> failed;
 
-  EA(const std::string ff, const uint cs, const uint ns, const uint ss,
-     const uint as, const uint is, const uint ls)
-      : fitness(ff), cycles(cs), neurons(ns), states(ss), actions(as),
-        instructions(is), links(ls) {}
+  EA(const std::set<sbyte> a, const std::string ff, const uint cs,
+     const uint ns, const uint ss, const uint as, const uint is, const uint ls)
+      : alphabet(a), fitness(ff), cycles(cs), neurons(ns), states(ss),
+        actions(as), instructions(is), links(ls) {}
 
   bool load(const std::string directory);
 
