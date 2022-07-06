@@ -135,7 +135,7 @@ TEST(InstructionTest, Rls) {
   ASSERT_TRUE(i.execute(nn, n, s, a));
 
   ASSERT_EQ(1, n.stack.size());
-  ASSERT_EQ(123, n.stack.top());
+  ASSERT_EQ(2147483643, n.stack.top());
 
   // Program Counter Incremented
   ASSERT_EQ(1, a.pc);
@@ -296,7 +296,7 @@ TEST(InstructionTest, JumpEZ) {
   State s;
   Action a;
   std::string label = "label0";
-  Jump i(Jump::ConditionCode::EZ, label);
+  Jump i(a, Jump::ConditionCode::EZ, label);
 
   // Stack Underflow
   ASSERT_FALSE(i.execute(nn, n, s, a));
@@ -332,7 +332,7 @@ TEST(InstructionTest, JumpNZ) {
   State s;
   Action a;
   std::string label = "label0";
-  Jump i(Jump::ConditionCode::NZ, label);
+  Jump i(a, Jump::ConditionCode::NZ, label);
 
   // Stack Underflow
   ASSERT_FALSE(i.execute(nn, n, s, a));
@@ -368,7 +368,7 @@ TEST(InstructionTest, JumpLE) {
   State s;
   Action a;
   std::string label = "label0";
-  Jump i(Jump::ConditionCode::LE, label);
+  Jump i(a, Jump::ConditionCode::LE, label);
 
   // Stack Underflow
   ASSERT_FALSE(i.execute(nn, n, s, a));
@@ -414,7 +414,7 @@ TEST(InstructionTest, JumpLZ) {
   State s;
   Action a;
   std::string label = "label0";
-  Jump i(Jump::ConditionCode::LZ, label);
+  Jump i(a, Jump::ConditionCode::LZ, label);
 
   // Stack Underflow
   ASSERT_FALSE(i.execute(nn, n, s, a));
@@ -461,7 +461,7 @@ TEST(InstructionTest, JumpUnrecognized) {
   State s;
   Action a;
   std::string label = "label0";
-  Jump i((Jump::ConditionCode)10, label);
+  Jump i(a, (Jump::ConditionCode)10, label);
 
   // Stack Underflow
   ASSERT_FALSE(i.execute(nn, n, s, a));

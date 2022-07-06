@@ -4,6 +4,8 @@
 #include <fstream>
 #include <string>
 
+#include <Neuro/data.h>
+
 class Fitness {
 public:
   std::ifstream source;

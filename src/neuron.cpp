@@ -18,7 +18,7 @@ bool Neuron::duplicate(const Neuron &n) {
   return true;
 }
 
-bool Neuron::generate(Random &rng, const std::set<sbyte> alphabet,
+bool Neuron::generate(Random &rng, const std::set<sint> alphabet,
                       const uint states, const uint actions,
                       const uint instructions) {
 
@@ -79,7 +79,7 @@ bool Neuron::mate(Random &rng, const Neuron &a, const Neuron &b) {
   return true;
 }
 
-bool Neuron::addState(Random &rng, const std::set<sbyte> alphabet,
+bool Neuron::addState(Random &rng, const std::set<sint> alphabet,
                       const uint actions, const uint instructions) {
   const auto ss = states.size();
 
@@ -108,21 +108,13 @@ bool Neuron::addState(Random &rng, const std::set<sbyte> alphabet,
   // Update Goto instructions
   for (auto &s : states) {
     if (s->wildcard) {
-      auto &is = s->wildcard.value()->instructions;
-      for (auto i = 0; i < is.size(); i++) {
-        std::shared_ptr<Goto> go2 = std::dynamic_pointer_cast<Goto>(is[i]);
-        if (go2 && go2->state < ss + 1 && go2->state >= id) {
-          is[i] = std::make_unique<Goto>(go2->state + 1);
-        }
+      for (auto &i : s->wildcard.value()->instructions) {
+        i->addState(id);
       }
     }
     for (auto &[p, a] : s->actions) {
-      auto &is = a->instructions;
-      for (auto i = 0; i < is.size(); i++) {
-        std::shared_ptr<Goto> go2 = std::dynamic_pointer_cast<Goto>(is[i]);
-        if (go2 && go2->state < ss + 1 && go2->state >= id) {
-          is[i] = std::make_unique<Goto>(go2->state + 1);
-        }
+      for (auto &i : a->instructions) {
+        i->addState(id);
       }
     }
   }
@@ -147,21 +139,13 @@ bool Neuron::removeState(const uint id) {
   // Update Goto instructions
   for (auto &s : states) {
     if (s->wildcard) {
-      auto &is = s->wildcard.value()->instructions;
-      for (auto itr = is.begin(); itr != is.cend(); itr++) {
-        std::shared_ptr<Goto> go2 = std::dynamic_pointer_cast<Goto>(*itr);
-        if (go2 && go2->state > 0 && go2->state > id) {
-          *itr = std::make_unique<Goto>(go2->state - 1);
-        }
+      for (auto &i : s->wildcard.value()->instructions) {
+        i->removeState(id);
       }
     }
     for (auto &[p, a] : s->actions) {
-      auto &is = a->instructions;
-      for (auto itr = is.begin(); itr != is.cend(); itr++) {
-        std::shared_ptr<Goto> go2 = std::dynamic_pointer_cast<Goto>(*itr);
-        if (go2 && go2->state > 0 && go2->state > id) {
-          *itr = std::make_unique<Goto>(go2->state - 1);
-        }
+      for (auto &i : a->instructions) {
+        i->removeState(id);
       }
     }
   }

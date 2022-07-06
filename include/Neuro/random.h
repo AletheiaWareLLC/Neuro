@@ -21,12 +21,13 @@ public:
 class RealRandom : public Random {
 public:
   std::mt19937 rng;
-  std::uniform_int_distribution<int> sdist;
+  std::uniform_int_distribution<sint> sdist;
   std::uniform_int_distribution<uint> udist;
 
   RealRandom()
       : rng(std::chrono::system_clock::now().time_since_epoch().count()),
-        sdist(std::numeric_limits<int>::min(), std::numeric_limits<int>::max()),
+        sdist(std::numeric_limits<sint>::min(),
+              std::numeric_limits<sint>::max()),
         udist(0, std::numeric_limits<uint>::max()) {}
   ~RealRandom() {}
 

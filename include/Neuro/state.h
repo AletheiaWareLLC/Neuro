@@ -13,7 +13,7 @@
 class State {
 public:
   uint id = 0;
-  std::map<sbyte, std::unique_ptr<Action>> actions;
+  std::map<sint, std::unique_ptr<Action>> actions;
   std::optional<std::unique_ptr<Action>> wildcard;
 
   State() : id(0) {}
@@ -24,12 +24,12 @@ public:
 
   bool duplicate(const State &s);
 
-  bool generate(Random &rng, const std::set<sbyte> alphabet, const uint states,
+  bool generate(Random &rng, const std::set<sint> alphabet, const uint states,
                 const uint actions, const uint instructions);
 
   bool mate(Random &rng, const State &a, const State &b);
 
-  bool addAction(Random &rng, const std::set<sbyte> alphabet, const uint states,
+  bool addAction(Random &rng, const std::set<sint> alphabet, const uint states,
                  const uint instructions);
 
   bool removeAction(const sint id);

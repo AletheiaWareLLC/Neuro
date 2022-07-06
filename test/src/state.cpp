@@ -7,11 +7,11 @@
 TEST(StateTest, Duplicate) {
   FakeRandom rng;
   State a(1);
-  rng.sints.push(0);  // Not Instruction
+  rng.uints.push(0);  // Not Instruction
   rng.sints.push(0);  // Pattern Action
-  rng.sints.push(1);  // And Instruction
+  rng.uints.push(1);  // And Instruction
   rng.sints.push(1);  // Pattern Action
-  rng.sints.push(0);  // Not Instruction
+  rng.uints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
   ASSERT_TRUE(a.generate(rng, numeric, 1, 3, 1));
 
@@ -25,7 +25,7 @@ TEST(StateTest, Duplicate) {
 
 TEST(StateTest, Generate) {
   FakeRandom rng;
-  rng.sints.push(0);  // Not Instruction
+  rng.uints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
 
   State s;
@@ -36,7 +36,7 @@ TEST(StateTest, Generate) {
 
   ASSERT_TRUE(s.wildcard);
 
-  rng.sints.push(0); // Not Instruction
+  rng.uints.push(0); // Not Instruction
   rng.sints.push(0); // Pattern Action
 
   ASSERT_TRUE(s.generate(rng, numeric, 1, 1, 1));
@@ -48,15 +48,15 @@ TEST(StateTest, Generate) {
 TEST(StateTest, Mate) {
   FakeRandom rng;
   State a;
-  rng.sints.push(0);  // Not Instruction
+  rng.uints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
-  rng.sints.push(1);  // And Instruction
+  rng.uints.push(1);  // And Instruction
   rng.sints.push(1);  // Pattern Action
   ASSERT_TRUE(a.generate(rng, numeric, 1, 2, 1));
   State b;
-  rng.sints.push(2);  // Or Instruction
+  rng.uints.push(2);  // Or Instruction
   rng.sints.push(-1); // Wildcard
-  rng.sints.push(3);  // Xor Instruction
+  rng.uints.push(3);  // Xor Instruction
   rng.sints.push(2);  // Pattern Action
   ASSERT_TRUE(b.generate(rng, numeric, 1, 2, 1));
 
@@ -74,13 +74,13 @@ TEST(StateTest, Mate) {
 TEST(StateTest, MateUnequalActionsA) {
   FakeRandom rng;
   State a;
-  rng.sints.push(0); // Not Instruction
+  rng.uints.push(0); // Not Instruction
   rng.sints.push(0); // Pattern Action
-  rng.sints.push(1); // And Instruction
+  rng.uints.push(1); // And Instruction
   rng.sints.push(1); // Pattern Action
   ASSERT_TRUE(a.generate(rng, numeric, 1, 2, 1));
   State b;
-  rng.sints.push(3); // Xor Instruction
+  rng.uints.push(3); // Xor Instruction
   rng.sints.push(2); // Pattern Action
   ASSERT_TRUE(b.generate(rng, numeric, 1, 1, 1));
 
@@ -99,13 +99,13 @@ TEST(StateTest, MateUnequalActionsA) {
 TEST(StateTest, MateUnequalActionsB) {
   FakeRandom rng;
   State a;
-  rng.sints.push(0); // Not Instruction
+  rng.uints.push(0); // Not Instruction
   rng.sints.push(0); // Pattern Action
   ASSERT_TRUE(a.generate(rng, numeric, 1, 1, 1));
   State b;
-  rng.sints.push(3); // Xor Instruction
+  rng.uints.push(3); // Xor Instruction
   rng.sints.push(1); // Pattern Action
-  rng.sints.push(1); // And Instruction
+  rng.uints.push(1); // And Instruction
   rng.sints.push(2); // Pattern Action
   ASSERT_TRUE(b.generate(rng, numeric, 1, 2, 1));
 
@@ -124,7 +124,7 @@ TEST(StateTest, MateUnequalActionsB) {
 TEST(StateTest, MateWildcardA) {
   FakeRandom rng;
   State a;
-  rng.sints.push(0);  // Not Instruction
+  rng.uints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
   ASSERT_TRUE(a.generate(rng, numeric, 1, 1, 1));
   State b;
@@ -140,7 +140,7 @@ TEST(StateTest, MateWildcardB) {
   FakeRandom rng;
   State a;
   State b;
-  rng.sints.push(0);  // Not Instruction
+  rng.uints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard
   ASSERT_TRUE(b.generate(rng, numeric, 1, 1, 1));
 
@@ -155,12 +155,12 @@ TEST(StateTest, AddRemoveAction) {
   FakeRandom rng;
   State s;
 
-  rng.sints.push(0); // Not Instruction
+  rng.uints.push(0); // Not Instruction
   rng.sints.push(0); // Pattern Action
   ASSERT_TRUE(s.addAction(rng, numeric, 1, 1));
   ASSERT_FALSE(s.wildcard);
   ASSERT_EQ(1, s.actions.size());
-  rng.sints.push(1);  // And Instruction
+  rng.uints.push(1);  // And Instruction
   rng.sints.push(-1); // Wildcard
   ASSERT_TRUE(s.addAction(rng, numeric, 1, 1));
   ASSERT_TRUE(s.wildcard);

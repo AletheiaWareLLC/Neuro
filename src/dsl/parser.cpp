@@ -2,7 +2,7 @@
 
 #include <Neuro/dsl/parser.h>
 
-bool Parser::parseLiteral(int &l) {
+bool Parser::parseLiteral(sint &l) {
   const Token t = lexer.peek();
   if (t.is(Token::Category::Literal)) {
     l = std::stoi(t.value);
@@ -26,7 +26,7 @@ bool Parser::parseNetwork(Network &nn) {
 
   while (lexer.peek().is(Token::Category::Link)) {
     lexer.move();
-    int source = 0;
+    sint source = 0;
     if (!parseLiteral(source)) {
       return false;
     }
@@ -42,7 +42,7 @@ bool Parser::parseNetwork(Network &nn) {
       return false;
     }
     while (!lexer.peek().is(Token::Category::Ccb)) {
-      int destination = 0;
+      sint destination = 0;
       if (!parseLiteral(destination)) {
         return false;
       }
@@ -68,7 +68,7 @@ bool Parser::parseNeuron(Neuron &n) {
     return false;
   }
 
-  int nid;
+  sint nid;
   if (!parseLiteral(nid)) {
     return false;
   }
@@ -101,7 +101,7 @@ bool Parser::parseState(State &s) {
     return false;
   }
 
-  int sid;
+  sint sid;
   if (!parseLiteral(sid)) {
     return false;
   }
@@ -124,7 +124,7 @@ bool Parser::parseState(State &s) {
     }
 
     bool wildcard = false;
-    int pattern;
+    sint pattern;
     if (lexer.peek().is(Token::Category::Ocb)) {
       wildcard = true;
     } else {
@@ -138,7 +138,7 @@ bool Parser::parseState(State &s) {
     }
 
     // Parse instructions
-    int pc = 0;
+    sint pc = 0;
     while (!lexer.peek().is(Token::Category::Ccb)) {
       if (lexer.peek().is(Token::Category::Label)) {
         if (!parseLabel(*a, pc)) {
@@ -170,7 +170,7 @@ bool Parser::parseLabel(std::string &l) {
   return true;
 }
 
-bool Parser::parseLabel(Action &a, int pc) {
+bool Parser::parseLabel(Action &a, sint pc) {
   const Token t = lexer.move();
   a.labels[t.value] = pc;
   return true;
@@ -178,50 +178,50 @@ bool Parser::parseLabel(Action &a, int pc) {
 
 bool Parser::parseInstruction(Action &a) {
   const Token t = lexer.move();
-  std::shared_ptr<Instruction> i;
+  std::unique_ptr<Instruction> i;
   switch (t.category) {
   case Token::Category::Not:
-    i = std::make_shared<Not>();
+    i = std::make_unique<Not>();
     break;
   case Token::Category::And:
-    i = std::make_shared<And>();
+    i = std::make_unique<And>();
     break;
   case Token::Category::Or:
-    i = std::make_shared<Or>();
+    i = std::make_unique<Or>();
     break;
   case Token::Category::Xor:
-    i = std::make_shared<Xor>();
+    i = std::make_unique<Xor>();
     break;
   case Token::Category::Lls:
-    i = std::make_shared<Lls>();
+    i = std::make_unique<Lls>();
     break;
   case Token::Category::Rls:
-    i = std::make_shared<Rls>();
+    i = std::make_unique<Rls>();
     break;
   case Token::Category::Add:
-    i = std::make_shared<Add>();
+    i = std::make_unique<Add>();
     break;
   case Token::Category::Sub:
-    i = std::make_shared<Sub>();
+    i = std::make_unique<Sub>();
     break;
   case Token::Category::Mul:
-    i = std::make_shared<Mul>();
+    i = std::make_unique<Mul>();
     break;
   case Token::Category::Div:
-    i = std::make_shared<Div>();
+    i = std::make_unique<Div>();
     break;
   case Token::Category::Mod:
-    i = std::make_shared<Mod>();
+    i = std::make_unique<Mod>();
     break;
   case Token::Category::Ras:
-    i = std::make_shared<Ras>();
+    i = std::make_unique<Ras>();
     break;
   case Token::Category::Jez: {
     std::string label;
     if (!parseLabel(label)) {
       return false;
     }
-    i = std::make_shared<Jump>(Jump::ConditionCode::EZ, label);
+    i = std::make_unique<Jump>(a, Jump::ConditionCode::EZ, label);
     break;
   }
   case Token::Category::Jnz: {
@@ -229,7 +229,7 @@ bool Parser::parseInstruction(Action &a) {
     if (!parseLabel(label)) {
       return false;
     }
-    i = std::make_shared<Jump>(Jump::ConditionCode::NZ, label);
+    i = std::make_unique<Jump>(a, Jump::ConditionCode::NZ, label);
     break;
   }
   case Token::Category::Jle: {
@@ -237,7 +237,7 @@ bool Parser::parseInstruction(Action &a) {
     if (!parseLabel(label)) {
       return false;
     }
-    i = std::make_shared<Jump>(Jump::ConditionCode::LE, label);
+    i = std::make_unique<Jump>(a, Jump::ConditionCode::LE, label);
     break;
   }
   case Token::Category::Jlz: {
@@ -245,11 +245,11 @@ bool Parser::parseInstruction(Action &a) {
     if (!parseLabel(label)) {
       return false;
     }
-    i = std::make_shared<Jump>(Jump::ConditionCode::LZ, label);
+    i = std::make_unique<Jump>(a, Jump::ConditionCode::LZ, label);
     break;
   }
   case Token::Category::Goto: {
-    int state;
+    sint state;
     if (!parseLiteral(state)) {
       return false;
     }
@@ -257,39 +257,33 @@ bool Parser::parseInstruction(Action &a) {
       lexer.error() << "Negative Next State" << std::endl;
       return false;
     }
-    i = std::make_shared<Goto>(state);
+    i = std::make_unique<Goto>(state);
     break;
   }
   case Token::Category::Push: {
-    int constant = 0;
+    sint constant = 0;
     if (!parseLiteral(constant)) {
       return false;
     }
-    // Ensure constant in within sbyte range
-    if (constant < std::numeric_limits<sbyte>::min() ||
-        constant > std::numeric_limits<sbyte>::max()) {
-      lexer.error() << "Constant Out-of-Range: " << constant << std::endl;
-      return false;
-    }
-    i = std::make_shared<Push>((sbyte)constant);
+    i = std::make_unique<Push>(constant);
     break;
   }
   case Token::Category::Drop:
-    i = std::make_shared<Drop>();
+    i = std::make_unique<Drop>();
     break;
   case Token::Category::Copy:
-    i = std::make_shared<Copy>();
+    i = std::make_unique<Copy>();
     break;
   case Token::Category::Swap:
-    i = std::make_shared<Swap>();
+    i = std::make_unique<Swap>();
     break;
   case Token::Category::Send:
-    i = std::make_shared<Send>();
+    i = std::make_unique<Send>();
     break;
   default:
     lexer.error() << "Unrecognized Instruction: " << t << std::endl;
     return false;
   }
-  a.instructions.push_back(i);
+  a.instructions.push_back(std::move(i));
   return true;
 }

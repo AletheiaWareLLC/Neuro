@@ -17,7 +17,7 @@ public:
   uint id = 0;
   uint state = 0;
   std::vector<std::unique_ptr<State>> states;
-  std::stack<sbyte> stack;
+  std::stack<sint> stack;
 
   Neuron() : id(0), state(0) {}
   explicit Neuron(uint id) : id(id), state(0) {}
@@ -27,12 +27,12 @@ public:
 
   bool duplicate(const Neuron &n);
 
-  bool generate(Random &rng, const std::set<sbyte> alphabet, const uint states,
+  bool generate(Random &rng, const std::set<sint> alphabet, const uint states,
                 const uint actions, const uint instructions);
 
   bool mate(Random &rng, const Neuron &a, const Neuron &b);
 
-  bool addState(Random &rng, const std::set<sbyte> alphabet, const uint actions,
+  bool addState(Random &rng, const std::set<sint> alphabet, const uint actions,
                 const uint instructions);
 
   bool removeState(const uint id);

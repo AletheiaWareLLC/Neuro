@@ -30,7 +30,7 @@ bool State::duplicate(const State &s) {
   return true;
 }
 
-bool State::generate(Random &rng, const std::set<sbyte> alphabet,
+bool State::generate(Random &rng, const std::set<sint> alphabet,
                      const uint states, const uint actions,
                      const uint instructions) {
 
@@ -124,7 +124,7 @@ bool State::mate(Random &rng, const State &a, const State &b) {
   return true;
 }
 
-bool State::addAction(Random &rng, const std::set<sbyte> alphabet,
+bool State::addAction(Random &rng, const std::set<sint> alphabet,
                       const uint states, const uint instructions) {
   auto a = std::make_unique<Action>();
 

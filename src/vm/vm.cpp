@@ -15,29 +15,18 @@ bool VM::execute(Network &nn, Neuron &n, State &s, Action &a, uint &c) const {
     }
 
     const auto pc = a.pc;
-    const auto i = a.instructions[pc];
     // Execute Instruction
-    if (!i->execute(nn, n, s, a)) {
+    if (!a.instructions[pc]->execute(nn, n, s, a)) {
       std::cerr << "VM Error: Instruction at pc " << pc << " Failed"
                 << std::endl;
       return false;
     }
-    /**
-    std::cout << "Inst: " << pc << ": ";
-    i->emit(std::cout);
-    std::cout << "Stack: " << n.stack.size();
-    if (!n.stack.empty()) {
-      std::cout << " Top: " << n.stack.top() << " "
-                << std::bitset<8>(n.stack.top());
-    }
-    std::cout << std::endl;
-    /**/
   }
   return true;
 }
 
-bool VM::execute(Network &nn, const std::vector<sbyte> &input,
-                 std::vector<sbyte> &output, uint &c) const {
+bool VM::execute(Network &nn, const std::vector<sint> &input,
+                 std::vector<sint> &output, uint &c) const {
   nn.reset();
 
   const auto ns = nn.neurons.size();
@@ -56,8 +45,6 @@ bool VM::execute(Network &nn, const std::vector<sbyte> &input,
         return false;
       }
 
-      // std::cout << "Neuron: " << id << std::endl;
-
       Neuron &n = *nn.neurons[id].get();
 
       // Check Stack Overflow
@@ -66,26 +53,8 @@ bool VM::execute(Network &nn, const std::vector<sbyte> &input,
         return false;
       }
 
-      /**
-      std::cout << "Start: " << n.stack.size();
-      if (!n.stack.empty()) {
-        std::cout << " Top: " << n.stack.top() << " "
-                  << std::bitset<8>(n.stack.top());
-      }
-      std::cout << std::endl;
-      /**/
-
       // Push Input
       n.stack.push(v);
-
-      /**
-      std::cout << "Input: " << n.stack.size();
-      if (!n.stack.empty()) {
-        std::cout << " Top: " << n.stack.top() << " "
-                  << std::bitset<8>(n.stack.top());
-      }
-      std::cout << std::endl;
-      /**/
 
       if (n.state >= n.states.size()) {
         std::cerr << "VM Error: State Out-of-Bounds: " << n.state << std::endl;
@@ -112,15 +81,6 @@ bool VM::execute(Network &nn, const std::vector<sbyte> &input,
     // Read Next Output Data
     auto &on = *nn.neurons[ns - 1].get();
 
-    /**
-    std::cout << "Output: " << on.stack.size();
-    if (!on.stack.empty()) {
-      std::cout << " Top: " << on.stack.top() << " "
-                << std::bitset<8>(on.stack.top());
-    }
-    std::cout << std::endl;
-    /**/
-
     // Check Stack Underflow
     if (on.stack.empty()) {
       std::cerr << "VM Error: Stack Underflow" << std::endl;
@@ -128,7 +88,6 @@ bool VM::execute(Network &nn, const std::vector<sbyte> &input,
     }
 
     const auto ov = on.stack.top();
-    on.stack.pop();
     if (ov != 0) {
       output.push_back(ov);
     }

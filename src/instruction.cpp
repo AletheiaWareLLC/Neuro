@@ -128,7 +128,7 @@ bool Rls::execute(Network &nn, Neuron &n, State &s, Action &a) {
   // Pop Operand
   n.stack.pop();
   // Push Result
-  n.stack.push(((ubyte)v) >> 1);
+  n.stack.push(((uint)v) >> 1);
   // Increment Program Counter
   a.pc++;
   return true;
@@ -406,6 +406,8 @@ bool Send::execute(Network &nn, Neuron &n, State &s, Action &a) {
 
   // Get Operand
   const auto v = n.stack.top();
+  // Pop Operand
+  n.stack.pop();
 
   if (const auto itr = nn.links.find(n.id); itr == nn.links.end()) {
     error(nn, n, s, a) << "Send: Neuron has no Links" << std::endl;

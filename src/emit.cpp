@@ -171,12 +171,12 @@ bool Jump::emit(std::ostream &os) const {
 }
 
 bool Goto::emit(std::ostream &os) const {
-  os << "goto " << (int)state << '\n';
+  os << "goto " << std::to_string(state) << '\n';
   return true;
 }
 
 bool Push::emit(std::ostream &os) const {
-  os << "push " << (int)constant << '\n';
+  os << "push " << std::to_string(constant) << '\n';
   return true;
 }
 

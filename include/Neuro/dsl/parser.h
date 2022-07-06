@@ -12,12 +12,12 @@ public:
 
   Parser(Lexer &l) : lexer(l) {}
 
-  bool parseLiteral(int &l);
+  bool parseLiteral(sint &l);
   bool parseNetwork(Network &nn);
   bool parseNeuron(Neuron &n);
   bool parseState(State &s);
   bool parseLabel(std::string &l);
-  bool parseLabel(Action &a, int pc);
+  bool parseLabel(Action &a, sint pc);
   bool parseInstruction(Action &a);
 };
 

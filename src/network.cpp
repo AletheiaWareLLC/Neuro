@@ -34,7 +34,7 @@ bool Network::load(const std::string name) {
   return true;
 }
 
-bool Network::generate(Random &rng, const std::set<sbyte> alphabet,
+bool Network::generate(Random &rng, const std::set<sint> alphabet,
                        const uint neurons, const uint states,
                        const uint actions, const uint instructions,
                        const uint links) {
@@ -51,7 +51,7 @@ bool Network::generate(Random &rng, const std::set<sbyte> alphabet,
   return true;
 }
 
-bool Network::generateNeuron(Random &rng, const std::set<sbyte> alphabet,
+bool Network::generateNeuron(Random &rng, const std::set<sint> alphabet,
                              const uint id, const uint states,
                              const uint actions, const uint instructions) {
   auto n = std::make_unique<Neuron>(id);
@@ -184,7 +184,7 @@ bool Network::mate(Random &rng, const Network &a, const Network &b) {
   return true;
 }
 
-bool Network::mutate(Random &rng, const std::set<sbyte> alphabet,
+bool Network::mutate(Random &rng, const std::set<sint> alphabet,
                      const uint states, const uint actions,
                      const uint instructions) {
   // Default case is twice as likely
@@ -307,7 +307,7 @@ bool Network::mutate(Random &rng, const std::set<sbyte> alphabet,
   return true;
 }
 
-bool Network::addNeuron(Random &rng, const std::set<sbyte> alphabet,
+bool Network::addNeuron(Random &rng, const std::set<sint> alphabet,
                         const uint states, const uint actions,
                         const uint instructions) {
   const auto nid = rng.nextUnsignedInt() % (neurons.size() + 1);

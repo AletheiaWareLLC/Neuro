@@ -104,10 +104,12 @@ bool EA::evaluate(Random &rng, std::string &best, std::string &worst, uint &min,
 
   while (ff.next(question, answer)) {
 
-    std::vector<sbyte> input(question.size(), 0);
-    for (int i = 0; i < question.size(); i++) {
+    std::vector<sint> input(question.size() + 1, 0);
+    uint i = 0;
+    for (; i < question.size(); i++) {
       input[i] = question[i];
     }
+    input[i] = 0;
 
     for (const auto &[name, network] : population) {
       // std::cout << "Evaluating: " << name << std::endl;
@@ -116,14 +118,14 @@ bool EA::evaluate(Random &rng, std::string &best, std::string &worst, uint &min,
         continue;
       }
 
-      std::vector<sbyte> output;
+      std::vector<sint> output;
       uint c = 0;
 
       if (vm.execute(*network.get(), input, output, c)) {
         // Compare answer to fitness function
         // Start at cycle count to incentivize time efficiency
         auto error = c;
-        int i = 0;
+        uint i = 0;
         for (; i < output.size() && i < answer.size(); i++) {
           error += abs(output[i] - answer[i]);
         }

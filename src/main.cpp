@@ -76,7 +76,7 @@ bool generate(std::vector<std::string> options, std::string parameter) {
   }
 
   RealRandom rng;
-  std::set<sbyte> alphabet{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+  std::set<sint> alphabet{0, '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
   Network nn;
   if (!nn.generate(rng, alphabet, neurons, states, actions, instructions,
                    links)) {
@@ -129,12 +129,13 @@ bool run(std::vector<std::string> options, std::string parameter) {
   std::string question;
   while (std::getline(std::cin, question)) {
     // Communication
-    std::vector<sbyte> input;
-    std::vector<sbyte> output;
+    std::vector<sint> input;
+    std::vector<sint> output;
 
     for (const auto c : question) {
       input.push_back(c);
     }
+    input.push_back(0);
     uint c = 0;
     if (vm.execute(nn, input, output, c)) {
       std::cout << "Cycles: " << c << std::endl;
@@ -174,18 +175,26 @@ bool run(std::vector<std::string> options, std::string parameter) {
   return 0;
 }
 
+int evaluate(std::vector<std::string> options, std::string parameter) {
+  // TODO load all networks in directory
+  // Run all tests in fitness function
+  // Print scores
+  return 0;
+}
+
 int evolve(std::vector<std::string> options, std::string parameter) {
-  std::set<sbyte> alphabet;
+  std::set<sint> alphabet;
+  alphabet.insert(0);
   std::string directory = "./population";
 
-  uint population = 500;
-  uint generation = 100;
+  uint population = 1000;
+  uint generation = 500;
   uint lifespan = 5;
-  uint cycles = 5000;
+  uint cycles = 10000;
   uint neurons = 25;
   uint states = 5;
-  uint actions = 3;
-  uint instructions = 2;
+  uint actions = 5;
+  uint instructions = 5;
   uint links = (float)neurons * 2.5f;
 
   // TODO Parse Options
@@ -381,6 +390,8 @@ int main(int argc, char **argv) {
     return generate(options, parameter);
   } else if (command == "run") {
     return run(options, parameter);
+  } else if (command == "evaluate") {
+    return evaluate(options, parameter);
   } else if (command == "evolve") {
     return evolve(options, parameter);
   } else if (command == "random") {

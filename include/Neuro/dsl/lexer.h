@@ -12,8 +12,8 @@
 class Lexer {
 public:
   std::vector<Token> tokens;
-  int index = 0;
-  int line = 1;
+  uint index = 0;
+  uint line = 1;
 
   bool tokenize(std::istream &in);
 

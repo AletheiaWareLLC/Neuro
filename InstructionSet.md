@@ -35,4 +35,4 @@ copy - duplicate top of stack and push it onto stack
 swap - pop two, push in reverse order
 
 ## Message
-send - send top of stack via outbound links
+send - pop one, send via outbound links

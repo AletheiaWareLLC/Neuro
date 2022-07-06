@@ -25,26 +25,6 @@ constexpr auto network = "neuron 0 {\n"
                          "\n"
                          "link 0 {1}\n"
                          "\n";
-constexpr auto id = 6282755881505895648ul;
-
-TEST(NetworkTest, EmptyID) {
-  Network nn;
-  std::stringstream ss;
-  ASSERT_TRUE(nn.emit(ss));
-  const std::hash<std::string> hasher;
-  ASSERT_EQ(10599700700371220778ul, hasher(ss.str()));
-}
-
-TEST(NetworkTest, LoadID) {
-  std::istringstream in(network);
-  Network nn;
-  ASSERT_TRUE(nn.load(in));
-
-  std::stringstream ss;
-  ASSERT_TRUE(nn.emit(ss));
-  const std::hash<std::string> hasher;
-  ASSERT_EQ(id, hasher(ss.str()));
-}
 
 TEST(NetworkTest, LoadEmit) {
   std::istringstream in(network);
@@ -58,9 +38,9 @@ TEST(NetworkTest, LoadEmit) {
 
 TEST(NetworkTest, Generate) {
   FakeRandom rng;
-  rng.sints.push(-1); // Send Instruction
+  rng.uints.push(33); // Send Instruction
   rng.sints.push(-1); // Wildcard Action
-  rng.sints.push(0);  // Not Instruction
+  rng.uints.push(0);  // Not Instruction
   rng.sints.push(-1); // Wildcard Action
   rng.uints.push(0);  // Link Source
   rng.uints.push(1);  // Link Destination
@@ -254,7 +234,7 @@ TEST(NetworkTest, Mutate) {
   // Adding
   rng.uints.push(0);                 // Add Neuron
   rng.uints.push(nn.neurons.size()); // At the End
-  rng.sints.push(-1);                // Send Instruction
+  rng.uints.push(33);                // Send Instruction
   rng.sints.push(-1);                // Wildcard Action
   rng.uints.push(0);                 // Link from Self from Self
   rng.uints.push(0);                 // Link to Self from Self
@@ -271,7 +251,7 @@ TEST(NetworkTest, Mutate) {
 
   rng.uints.push(0);                 // Add Neuron
   rng.uints.push(nn.neurons.size()); // At the End
-  rng.sints.push(16);                // Goto Instruction
+  rng.uints.push(16);                // Goto Instruction
   rng.uints.push(1);                 // Goto State ID
   rng.sints.push(-1);                // Wildcard Action
   rng.uints.push(1);                 // Link from 1 to Self
@@ -298,7 +278,7 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(2);                // Add State
   rng.uints.push(0);                // Neuron ID
   rng.uints.push(n0.states.size()); // At the End
-  rng.sints.push(0);                // Not Instruction
+  rng.uints.push(0);                // Not Instruction
   rng.sints.push(0);                // Pattern Action
   ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
 
@@ -311,7 +291,7 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(2);                // Add State
   rng.uints.push(1);                // Neuron ID
   rng.uints.push(n1.states.size()); // At the End
-  rng.sints.push(2);                // Or Instruction
+  rng.uints.push(2);                // Or Instruction
   rng.sints.push(1);                // Pattern Action
   ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
 
@@ -327,7 +307,7 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(4); // Add Action
   rng.uints.push(0); // Neuron ID
   rng.uints.push(0); // State ID
-  rng.sints.push(3); // Xor Instruction
+  rng.uints.push(3); // Xor Instruction
   rng.sints.push(2); // Pattern Action
   ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_EQ(1, n0s0.actions.size());
@@ -336,7 +316,7 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(4); // Add Action
   rng.uints.push(1); // Neuron ID
   rng.uints.push(0); // State ID
-  rng.sints.push(4); // Lls Instruction
+  rng.uints.push(4); // Lls Instruction
   rng.sints.push(3); // Pattern Action
   ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   ASSERT_EQ(1, n1s0.actions.size());
@@ -368,7 +348,7 @@ TEST(NetworkTest, Mutate) {
   rng.uints.push(0); // Neuron ID
   rng.uints.push(1); // State ID
   rng.uints.push(0); // Mutation Type
-  rng.sints.push(0); // Not Instruction
+  rng.uints.push(0); // Not Instruction
   rng.sints.push(0); // Pattern Action (First Action in Map)
   ASSERT_TRUE(nn.mutate(rng, numeric, 1, 1, 1));
   auto &n0s1a10 = *n0s1.actions['0'];
@@ -409,10 +389,7 @@ TEST(NetworkTest, Mutate) {
   ASSERT_EQ(1, n0.states.size());
   ASSERT_EQ(0, n1s0.id);
   ASSERT_TRUE(n1s0.wildcard);
-  auto go2 =
-      std::dynamic_pointer_cast<Goto>(n1s0.wildcard.value()->instructions[0]);
-  ASSERT_NE(nullptr, go2);
-  ASSERT_EQ(0, go2->state);
+  ASSERT_EQ("goto 0\n", n1s0.wildcard.value()->instructions[0]->str());
 
   rng.uints.push(1); // Remove Neuron
   rng.uints.push(0); // Neuron ID
@@ -432,7 +409,7 @@ TEST(NetworkTest, Reset) {
   n->stack.push(1);
   Network nn;
   nn.neurons.push_back(std::move(n));
-  nn.queue.push(std::make_pair<sbyte, uint>(7, 0));
+  nn.queue.push(std::make_pair<sint, uint>(7, 0));
 
   nn.reset();
 
@@ -451,9 +428,9 @@ TEST(NetworkTest, EndToEnd_SendNot) {
 
   VM vm(10);
 
-  std::vector<sbyte> input{0, 1, 1, 0, 1};
+  std::vector<sint> input{0, 1, 1, 0, 1};
 
-  std::vector<sbyte> output;
+  std::vector<sint> output;
 
   uint c = 0;
   ASSERT_TRUE(vm.execute(nn, input, output, c));

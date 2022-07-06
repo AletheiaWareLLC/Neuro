@@ -19,7 +19,7 @@ class Network {
 public:
   std::vector<std::unique_ptr<Neuron>> neurons;
   std::map<uint, std::set<uint>> links;
-  std::queue<std::pair<uint, sbyte>> queue;
+  std::queue<std::pair<uint, sint>> queue;
 
   Network() {}
   Network(const Network &n) = delete;
@@ -29,20 +29,20 @@ public:
   bool load(std::istream &in);
   bool load(const std::string name);
 
-  bool generate(Random &rng, const std::set<sbyte> alphabet, const uint neurons,
+  bool generate(Random &rng, const std::set<sint> alphabet, const uint neurons,
                 const uint states, const uint actions, const uint instructions,
                 const uint links);
-  bool generateNeuron(Random &rng, const std::set<sbyte> alphabet,
-                      const uint id, const uint states, const uint actions,
+  bool generateNeuron(Random &rng, const std::set<sint> alphabet, const uint id,
+                      const uint states, const uint actions,
                       const uint instructions);
   bool generateLink(Random &rng);
 
   bool mate(Random &rng, const Network &a, const Network &b);
 
-  bool mutate(Random &rng, const std::set<sbyte> alphabet, const uint states,
+  bool mutate(Random &rng, const std::set<sint> alphabet, const uint states,
               const uint actions, const uint instructions);
 
-  bool addNeuron(Random &rng, const std::set<sbyte> alphabet, const uint states,
+  bool addNeuron(Random &rng, const std::set<sint> alphabet, const uint states,
                  const uint actions, const uint instructions);
 
   bool removeNeuron(const uint id);

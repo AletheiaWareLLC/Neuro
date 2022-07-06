@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <Neuro/action.h>
+#include <Neuro/data.h>
 #include <Neuro/network.h>
 #include <Neuro/neuron.h>
 #include <Neuro/random.h>
@@ -12,7 +13,7 @@
 
 class EA {
 public:
-  const std::set<sbyte> alphabet;
+  const std::set<sint> alphabet;
   const std::string fitness;
   const uint cycles;
   const uint neurons;
@@ -25,8 +26,8 @@ public:
   std::map<std::string, uint> errors;
   std::set<std::string> failed;
 
-  EA(const std::set<sbyte> a, const std::string ff, const uint cs,
-     const uint ns, const uint ss, const uint as, const uint is, const uint ls)
+  EA(const std::set<sint> a, const std::string ff, const uint cs, const uint ns,
+     const uint ss, const uint as, const uint is, const uint ls)
       : alphabet(a), fitness(ff), cycles(cs), neurons(ns), states(ss),
         actions(as), instructions(is), links(ls) {}
 

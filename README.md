@@ -1,6 +1,6 @@
 # Neuro
 
-Neuro is an implementation of a Neural Network in which each Neuron is implemented as an 8-bit Pushdown Automaton.
+Neuro is an implementation of a Neural Network in which each Neuron is implemented as a Pushdown Automaton.
 
 Neural Networks can either be written manually in Domain-Specific Language, or an Evolutionary Algorithm can be used to generate the optimal Neural Network for a given Fitness Function.
 
